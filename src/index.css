@@ -1,3 +1,157 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Base styles */
+:root {
+  font-family: 'Roboto', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reset box sizing */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Ensure proper root element sizing */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Override Tailwind preflight styles for Material-UI */
+button,
+[type='button'],
+[type='reset'],
+[type='submit'] {
+  background-color: inherit;
+}
+
+/* Ensure proper stacking context for Material-UI components */
+.MuiPopover-root,
+.MuiModal-root,
+.MuiDrawer-root {
+  z-index: 1300 !important;
+}
+
+/* Ensure proper link styling */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Ensure proper image handling */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Ensure proper form element styling */
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Ensure proper list styling */
+ul,
+ol {
+  list-style: none;
+}
+
+/* Ensure proper heading margins */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+/* Ensure proper paragraph margins */
+p {
+  margin: 0;
+}
+
+/* Ensure proper table styling */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/* Ensure proper hr styling */
+hr {
+  border: 0;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.1;
+}
+
+/* Ensure proper code styling */
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* Ensure proper pre styling */
+pre {
+  margin: 0;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* Ensure proper blockquote styling */
+blockquote {
+  margin: 0;
+}
+
+/* Ensure proper figure styling */
+figure {
+  margin: 0;
+}
+
+/* Ensure proper fieldset styling */
+fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* Ensure proper legend styling */
+legend {
+  padding: 0;
+}
+
+/* Ensure proper details and summary styling */
+details {
+  display: block;
+}
+
+summary {
+  display: list-item;
+}
+
+/* Ensure proper template styling */
+template {
+  display: none;
+}
+
+/* Ensure proper hidden attribute styling */
+[hidden] {
+  display: none !important;
+}

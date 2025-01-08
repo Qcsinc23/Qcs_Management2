@@ -1,10 +1,56 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    <meta name="description" content="QCS Management - Corporate and Retail Logistics Solutions" />
+    <meta name="theme-color" content="#1976d2" />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.com https://*.clerk.accounts.dev https://*.stripe.com https://js.stripe.com https://clerk.com https://accounts.clerk.com; connect-src 'self' https://*.clerk.com https://*.clerk.accounts.dev https://api.stripe.com https://checkout.stripe.com https://clerk.com https://accounts.clerk.com; img-src 'self' https://*.clerk.com https://*.clerk.accounts.dev https://clerk.com https://accounts.clerk.com data: https: blob:; style-src 'self' 'unsafe-inline' https://*.clerk.com https://*.clerk.accounts.dev https://clerk.com https://accounts.clerk.com https://fonts.googleapis.com https://js.stripe.com; font-src 'self' https://*.clerk.com https://*.clerk.accounts.dev https://clerk.com https://accounts.clerk.com https://fonts.gstatic.com data: https://js.stripe.com; frame-src 'self' https://*.clerk.com https://*.clerk.accounts.dev https://clerk.com https://accounts.clerk.com https://*.stripe.com https://js.stripe.com https://checkout.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; worker-src 'self' blob:; media-src 'self' blob: data:">
+    
+    <!-- Material-UI Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap"
+    />
+    <!-- Material Icons -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    />
+    
+    <title>QCS Management</title>
+    <style>
+      /* Ensure proper root element sizing */
+      html, body, #root {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      
+      /* Add a loading state */
+      #root:empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background: #f5f5f5;
+      }
+      
+      #root:empty::after {
+        content: "Loading...";
+        color: #1976d2;
+        font-family: "Roboto", sans-serif;
+        font-size: 1.2rem;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
