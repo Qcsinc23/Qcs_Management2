@@ -2,7 +2,6 @@ import { useUser, useClerk } from '@clerk/clerk-react';
 import { fetchOrganizationDetails, OrganizationDetails } from './services/organization';
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
 
 // Enhanced CSP configuration for Clerk with additional security headers
 export const SECURITY_HEADERS = {
@@ -95,6 +94,7 @@ export const applySecurityHeaders = (response: Response) => {
 interface OrganizationMetadata {
   id: string;
   name: string;
+  lastUpdated?: number;
   [key: string]: unknown;
 }
 
@@ -103,6 +103,49 @@ interface UseAuthMiddlewareProps {
   requireOnboarding?: boolean;
   allowedUserTypes?: Array<'retail' | 'corporate'>;
   requireOrganization?: boolean;
+}
+
+// Helper function to validate organization
+function validateOrganization(organization: unknown): organization is OrganizationMetadata {
+  if (!organization || typeof organization !== 'object') return false;
+  const org = organization as Record<string, unknown>;
+  return (
+    typeof org.id === 'string' &&
+    org.id.length > 0 &&
+    typeof org.name === 'string' &&
+    org.name.length > 0 &&
+    (org.lastUpdated === undefined || typeof org.lastUpdated === 'number')
+  );
+}
+
+// Helper function to validate session token
+async function validateSessionToken(session: ReturnType<typeof useClerk>['session']) {
+  const token = await session?.getToken({
+    leewayInSeconds: 120,
+    template: 'organization_validation',
+    skipCache: true
+  });
+
+  if (!token) throw new Error('Failed to get valid session token');
+  return token;
+}
+
+// Helper function to validate and parse organization from cache
+function parseOrganizationCache(cachedData: string | null, orgId: string): OrganizationDetails | null {
+  if (!cachedData) return null;
+  try {
+    const parsed = JSON.parse(cachedData);
+    if (
+      parsed?.id === orgId &&
+      parsed?.name &&
+      Date.now() - (parsed.cachedAt || 0) < 5 * 60 * 1000
+    ) {
+      return parsed;
+    }
+  } catch {
+    return null;
+  }
+  return null;
 }
 
 export function useAuthMiddleware({
@@ -191,56 +234,56 @@ export function useAuthMiddleware({
 
           // Check if user type is allowed
           if (allowedUserTypes.length > 0) {
-          // If user doesn't have a type yet, check localStorage and URL path
-          if (!userType) {
-            const storedType = localStorage.getItem('userType');
-            const pathType = location.pathname.split('/')[1];
-            
-            // Determine type from most reliable source
-            const determinedType = 
-              allowedUserTypes.includes(pathType as 'retail' | 'corporate') ? pathType :
-              storedType && allowedUserTypes.includes(storedType as 'retail' | 'corporate') ? storedType :
-              null;
+            // If user doesn't have a type yet, check localStorage and URL path
+            if (!userType) {
+              const storedType = localStorage.getItem('userType');
+              const pathType = location.pathname.split('/')[1];
+              
+              // Determine type from most reliable source
+              const determinedType = 
+                allowedUserTypes.includes(pathType as 'retail' | 'corporate') ? pathType :
+                storedType && allowedUserTypes.includes(storedType as 'retail' | 'corporate') ? storedType :
+                null;
 
-            if (determinedType) {
-              await user.update({
-                unsafeMetadata: {
-                  ...user.unsafeMetadata,
-                  userType: determinedType,
-                  onboardingComplete: false
-                }
-              });
-              await session?.reload();
+              if (determinedType) {
+                await user.update({
+                  unsafeMetadata: {
+                    ...user.unsafeMetadata,
+                    userType: determinedType,
+                    onboardingComplete: false
+                  }
+                });
+                await session?.reload();
+                
+                // Store type in localStorage for consistency
+                localStorage.setItem('userType', determinedType);
+                
+                // Redirect to onboarding with proper state
+                navigate(`/${determinedType}/onboarding`, {
+                  state: {
+                    from: location.pathname,
+                    requiresOnboarding: true,
+                    userType: determinedType
+                  },
+                  replace: true
+                });
+                return;
+              }
+            }
               
-              // Store type in localStorage for consistency
-              localStorage.setItem('userType', determinedType);
-              
-              // Redirect to onboarding with proper state
-              navigate(`/${determinedType}/onboarding`, {
+            // If user has a type that's not allowed, redirect with proper state
+            if (userType && !allowedUserTypes.includes(userType as 'retail' | 'corporate')) {
+              navigate(`/${userType}`, {
                 state: {
                   from: location.pathname,
-                  requiresOnboarding: true,
-                  userType: determinedType
+                  restricted: true,
+                  allowedTypes: allowedUserTypes,
+                  currentType: userType
                 },
                 replace: true
               });
               return;
             }
-          }
-            
-          // If user has a type that's not allowed, redirect with proper state
-          if (userType && !allowedUserTypes.includes(userType as 'retail' | 'corporate')) {
-            navigate(`/${userType}`, {
-              state: {
-                from: location.pathname,
-                restricted: true,
-                allowedTypes: allowedUserTypes,
-                currentType: userType
-              },
-              replace: true
-            });
-            return;
-          }
           }
 
           // Check if onboarding is required with proper state
@@ -259,257 +302,61 @@ export function useAuthMiddleware({
           // Check if organization is required (for corporate users)
           if (requireOrganization && userType === 'corporate' && onboardingComplete) {
             try {
-              // Enhanced organization validation with detailed error tracking and type safety
-              const organization = user?.unsafeMetadata?.currentOrganization as OrganizationMetadata | undefined;
-              const validationErrors: string[] = [];
-              
-              // Early return if organization is missing
-              if (!organization) {
-                validationErrors.push('Organization metadata is missing');
-                console.warn('Organization validation failed:', validationErrors.join(', '));
-                return {
-                  isValid: false,
-                  errors: validationErrors,
-                  organization: null
-                };
+              const orgData = user?.unsafeMetadata?.currentOrganization;
+              if (!validateOrganization(orgData)) {
+                throw new Error('Invalid organization data');
               }
 
-              // Validate organization structure
-              if (typeof organization !== 'object') {
-                validationErrors.push('Organization metadata is not an object');
-              }
-              if (typeof organization.id !== 'string' || organization.id.length === 0) {
-                validationErrors.push('Organization ID is invalid');
-              }
-              if (typeof organization.name !== 'string' || organization.name.length === 0) {
-                validationErrors.push('Organization name is invalid');
-              }
-              if (organization.lastUpdated && typeof organization.lastUpdated !== 'number') {
-                validationErrors.push('Last updated timestamp is invalid');
-              }
+              const organization = orgData;
+              const lastUpdated = organization.lastUpdated ?? 0;
+              const refreshInterval = 12 * 60 * 60 * 1000;
 
-              const isValidOrganization = validationErrors.length === 0;
-              if (!isValidOrganization) {
-                console.warn('Organization validation failed:', validationErrors.join(', '));
-              }
+              if (Date.now() - lastUpdated > refreshInterval) {
+                const sessionToken = await validateSessionToken(session);
+                const cachedOrg = parseOrganizationCache(
+                  sessionStorage.getItem(`org_${organization.id}`),
+                  organization.id
+                );
 
-              return {
-                isValid: isValidOrganization,
-                errors: validationErrors,
-                organization: isValidOrganization ? organization : null
-              };
-
-              // If organization is invalid and we're not already on onboarding
-              if (!isValidOrganization && !location.pathname.includes('/onboarding')) {
-                // Clean up localStorage and sessionStorage before redirect
-                localStorage.removeItem('tempOrganizationData');
-                sessionStorage.removeItem('organizationValidationState');
-                
-                // Store current state for potential recovery
-                const recoveryState = {
-                  path: location.pathname,
-                  search: location.search,
-                  state: location.state,
-                  timestamp: Date.now(),
-                  validationAttempt: (location.state?.validationAttempt || 0) + 1
-                };
-                
-                // Prevent infinite redirect loops
-                if (recoveryState.validationAttempt > 3) {
-                  throw new Error('Maximum organization validation attempts exceeded');
-                }
-                
-                sessionStorage.setItem('organizationValidationState', JSON.stringify(recoveryState));
-                
-                // Redirect with state to prevent loops
-                navigate('/corporate/onboarding', {
-                  state: { 
-                    from: location.pathname,
-                    requiresOrganization: true,
-                    validationError: 'invalid_organization_data',
-                    validationAttempt: recoveryState.validationAttempt
-                  },
-                  replace: true
-                });
-                return;
-              }
-
-              // Additional validation and refresh for organization data
-              if (isValidOrganization) {
-                    // Check if organization data needs refresh
-                    const lastUpdated = organization?.lastUpdated as number | undefined;
-                    const refreshInterval = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
-                    
-                    if (!lastUpdated || Date.now() - lastUpdated > refreshInterval) {
-                  try {
-                    // Get session token with explicit expiration and validation
-                    const sessionToken = await session?.getToken({
-                      leewayInSeconds: 120, // 2 minute leeway
-                      template: 'organization_validation',
-                      skipCache: true // Ensure fresh token
-                    });
-                    if (!sessionToken) {
-                      throw new Error('Session token is required');
-                    }
-                    
-                    if (!sessionToken) {
-                      throw new Error('Failed to get valid session token');
-                    }
-
-                    // Validate token structure and expiration
-                    const tokenParts = sessionToken.split('.');
-                    if (tokenParts.length !== 3) {
-                      throw new Error('Invalid session token format');
-                    }
-
-                    let tokenPayload: { exp: number };
-                    try {
-                      const payload = JSON.parse(atob(tokenParts[1]));
-                      if (!payload?.exp || typeof payload.exp !== 'number') {
-                        throw new Error('Invalid token payload');
-                      }
-                      tokenPayload = { exp: payload.exp };
-                    } catch (error) {
-                      throw new Error('Failed to parse token payload');
-                    }
-                    const expirationBuffer = 5 * 60 * 1000; // 5 minute buffer
-                    if (Date.now() + expirationBuffer >= tokenPayload.exp * 1000) {
-                      throw new Error('Session token near expiration');
-                    }
-
-                    // Attempt to refresh organization data with validation
-                    if (!organization?.id) {
-                      throw new Error('Organization ID is required');
-                    }
-                    
-                    const orgId = organization.id;
-                    if (typeof orgId !== 'string' || orgId.length === 0) {
-                      throw new Error('Invalid organization ID');
-                    }
-
-                    // Validate organization ID format
-                    if (!/^org_[a-zA-Z0-9]{24}$/.test(orgId)) {
-                      throw new Error('Malformed organization ID');
-                    }
-                    
-                    // Check if we have cached organization data
-                    const cachedOrg = sessionStorage.getItem(`org_${orgId}`);
-                    let updatedOrg: OrganizationDetails | null = null;
-                    
-                    if (cachedOrg && typeof cachedOrg === 'string') {
-                      try {
-                        const parsedOrg = JSON.parse(cachedOrg);
-                        // Validate cached data
-                        if (parsedOrg?.id === orgId && 
-                            parsedOrg?.name &&
-                            Date.now() - (parsedOrg.cachedAt || 0) < 5 * 60 * 1000) { // 5 minute cache
-                          updatedOrg = parsedOrg;
-                        } else {
-                          sessionStorage.removeItem(`org_${orgId}`);
-                        }
-                      } catch (error) {
-                        console.error('Failed to parse cached organization data:', error);
-                        sessionStorage.removeItem(`org_${orgId}`);
-                      }
-                    }
-
-                    if (!updatedOrg) {
-                      if (!sessionToken) {
-                        throw new Error('Session token is required');
-                      }
-                      
-                      if (!orgId) {
-                        throw new Error('Organization ID is required');
-                      }
-                      
-                      if (!organization) {
-                        throw new Error('Organization metadata is required');
-                      }
-                      
-                      if (typeof orgId !== 'string') {
-                        throw new Error('Invalid organization ID type');
-                      }
-                      
-                      const fetchedOrg = await fetchOrganizationDetails(orgId, sessionToken);
-                      if (!fetchedOrg?.id || !fetchedOrg?.name) {
-                        throw new Error('Invalid organization data received');
-                      }
-                      updatedOrg = fetchedOrg;
-
-                      // Cache the organization data
-                      sessionStorage.setItem(`org_${orgId}`, JSON.stringify({
-                        ...updatedOrg,
-                        cachedAt: Date.now()
-                      }));
-                    }
-
-                    // Update user metadata with refreshed organization data
-                    if (!user?.update) {
-                      throw new Error('User update method is not available');
-                    }
-                    
-                    await user.update({
-                      unsafeMetadata: {
-                        ...user.unsafeMetadata,
-                        currentOrganization: {
-                          ...updatedOrg,
-                          lastUpdated: Date.now(),
-                          validatedAt: Date.now()
-                        }
-                      }
-                    });
-                    
-                    // Reload session to ensure consistency
-                    await session?.reload();
-                  } catch (error) {
-                    console.error('Organization refresh failed:', error instanceof Error ? error.message : 'Unknown error');
-                    
-                    // Store error details for debugging
-                    const errorDetails = {
-                      error: error instanceof Error ? error.message : 'Unknown error',
-                      timestamp: Date.now(),
-                      organizationId: organization?.id || 'unknown'
-                    };
-                    
-                    sessionStorage.setItem('organizationRefreshError', JSON.stringify(errorDetails));
-                    
-                    // Redirect to onboarding with detailed error state
-                    navigate('/corporate/onboarding', {
-                      state: { 
-                        from: location.pathname,
-                        error: 'organization_refresh_failed',
-                        organizationId: organization.id,
-                        errorDetails: errorDetails
-                      },
-                      replace: true
-                    });
-                    return;
+                let updatedOrg: OrganizationDetails;
+                if (cachedOrg) {
+                  updatedOrg = cachedOrg;
+                } else {
+                  const fetchedOrg = await fetchOrganizationDetails(organization.id, sessionToken);
+                  if (!fetchedOrg?.id || !fetchedOrg?.name) {
+                    throw new Error('Invalid organization data received');
                   }
+                  updatedOrg = fetchedOrg;
+                  sessionStorage.setItem(
+                    `org_${organization.id}`,
+                    JSON.stringify({ ...updatedOrg, cachedAt: Date.now() })
+                  );
                 }
+
+                await user.update({
+                  unsafeMetadata: {
+                    ...user.unsafeMetadata,
+                    currentOrganization: {
+                      ...updatedOrg,
+                      lastUpdated: Date.now(),
+                      validatedAt: Date.now()
+                    }
+                  }
+                });
+
+                await session?.reload();
               }
             } catch (error) {
-              if (error instanceof Error) {
-                console.error('Organization validation error:', error.message);
-                // Attempt recovery by redirecting to onboarding
-                navigate('/corporate/onboarding', {
-                  state: { 
-                    from: location.pathname,
-                    error: 'organization_validation_failed',
-                    message: error.message
-                  },
-                  replace: true
-                });
-              } else {
-                console.error('Unknown organization validation error');
-                navigate('/corporate/onboarding', {
-                  state: { 
-                    from: location.pathname,
-                    error: 'organization_validation_failed',
-                    message: 'Unknown error'
-                  },
-                  replace: true
-                });
-              }
+              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+              console.error('Organization validation error:', errorMessage);
+              navigate('/corporate/onboarding', {
+                state: {
+                  from: location.pathname,
+                  error: 'organization_validation_failed',
+                  message: errorMessage
+                },
+                replace: true
+              });
               return;
             }
           }
@@ -517,19 +364,8 @@ export function useAuthMiddleware({
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         console.error('Authentication middleware error:', errorMessage);
+        
         // Redirect to error page with state
-        // Enhanced error handling with security headers
-        const errorResponse = new Response(null, {
-          status: 302,
-          headers: new Headers({
-            Location: '/error',
-            ...SECURITY_HEADERS
-          })
-        });
-        
-        // Apply security headers and redirect
-        applySecurityHeaders(errorResponse);
-        
         navigate('/error', {
           state: {
             error: 'auth_middleware_failure',

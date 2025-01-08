@@ -1,6 +1,13 @@
 export {}
 
 declare global {
+  interface Notification {
+    id: string;
+    type: 'info' | 'success' | 'warning' | 'error';
+    message: string;
+    duration?: number;
+  }
+
   interface CustomJwtSessionClaims {
     metadata: {
       userType?: 'retail' | 'corporate';

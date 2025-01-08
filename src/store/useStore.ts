@@ -21,6 +21,14 @@ interface Delivery {
   estimatedArrival: Date;
 }
 
+interface Notification {
+  id: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  message: string;
+  timestamp: Date;
+  read: boolean;
+}
+
 interface StoreState {
   // Events
   events: Event[];
@@ -42,6 +50,11 @@ interface StoreState {
   addChatMessage: (message: Omit<Message, 'id' | 'timestamp'>) => void;
   clearChatMessages: () => void;
 
+  // Notifications
+  notifications: Notification[];
+  addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
+  markNotificationAsRead: (id: string) => void;
+  clearNotifications: () => void;
 }
 
 const useStore = create<StoreState>((set) => ({
@@ -90,6 +103,30 @@ const useStore = create<StoreState>((set) => ({
       ],
     })),
   clearChatMessages: () => set({ chatMessages: [] }),
+
+  // Notifications
+  notifications: [],
+  addNotification: (notification) =>
+    set((state) => ({
+      notifications: [
+        ...state.notifications,
+        {
+          ...notification,
+          id: Math.random().toString(36).substring(7),
+          timestamp: new Date(),
+          read: false,
+        },
+      ],
+    })),
+  markNotificationAsRead: (id) =>
+    set((state) => ({
+      notifications: state.notifications.map((notification) =>
+        notification.id === id
+          ? { ...notification, read: true }
+          : notification
+      ),
+    })),
+  clearNotifications: () => set({ notifications: [] }),
 }));
 
 export default useStore;

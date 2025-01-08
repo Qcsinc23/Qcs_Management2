@@ -1,67 +1,73 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { Box, CircularProgress, Typography } from '@mui/material';
-import App from './App';
-import './index.css';
-import { CSP_HEADERS, applySecurityHeaders } from './middleware';
+import React, { Component, ErrorInfo, ReactNode } from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.tsx'
+import './index.css'
 
-// Apply security headers to document
-Object.entries(CSP_HEADERS).forEach(([header, value]) => {
-  const meta = document.createElement('meta');
-  meta.httpEquiv = header;
-  meta.content = value;
-  document.head.appendChild(meta);
-});
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
 
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean; error: Error | null }
-> {
-  constructor(props: { children: React.ReactNode }) {
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error) {
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('Uncaught error:', error, errorInfo);
+  }
+
+  handleReset = () => {
+    this.setState({ hasError: false, error: undefined });
+    window.location.reload();
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '100vh',
-            p: 3,
-            textAlign: 'center',
-          }}
-        >
-          <Typography variant="h5" color="error" gutterBottom>
-            Something went wrong
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {this.state.error?.message || 'An unexpected error occurred'}
-          </Typography>
-          <Box sx={{ mt: 2 }}>
-            <button
-              onClick={() => window.location.reload()}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '4px',
-                border: 'none',
-                backgroundColor: '#1976d2',
-                color: 'white',
-                cursor: 'pointer',
-              }}
-            >
-              Reload Page
-            </button>
-          </Box>
-        </Box>
+        <div role="alert" style={{
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          height: '100vh',
+          fontFamily: 'Arial, sans-serif',
+          textAlign: 'center'
+        }}>
+          <h1>Oops! Something went wrong</h1>
+          <pre style={{
+            backgroundColor: '#f0f0f0', 
+            padding: '20px', 
+            borderRadius: '5px', 
+            maxWidth: '600px', 
+            wordWrap: 'break-word'
+          }}>
+            {this.state.error?.message}
+          </pre>
+          <button 
+            onClick={this.handleReset}
+            style={{
+              marginTop: '20px',
+              padding: '10px 20px',
+              backgroundColor: '#1976d2',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}
+          >
+            Try Again
+          </button>
+        </div>
       );
     }
 
@@ -69,13 +75,7 @@ class ErrorBoundary extends React.Component<
   }
 }
 
-const root = document.getElementById('root');
-
-if (!root) {
-  throw new Error('Root element not found');
-}
-
-ReactDOM.createRoot(root).render(
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
       <App />

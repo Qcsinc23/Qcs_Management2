@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
-import { ClerkProvider } from '@clerk/clerk-react';
+import { ClerkProvider, ClerkLoaded, ClerkLoading } from '@clerk/clerk-react';
 import { useEffect } from 'react';
 
 // Security headers from middleware
@@ -95,10 +95,61 @@ const Reports = () => <div>Reports Page</div>;
 const Users = () => <div>Users Page</div>;
 const Settings = () => <div>Settings Page</div>;
 
-// Validate environment variables
-if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
-  throw new Error('Missing Publishable Key');
-}
+// Loading component
+const LoadingScreen = () => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    backgroundColor: '#f5f5f5'
+  }}>
+    <div style={{
+      textAlign: 'center',
+      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif'
+    }}>
+      <h2>Loading QCS Management...</h2>
+      <p>Please wait while we initialize the application.</p>
+    </div>
+  </div>
+);
+
+// Error component
+const ErrorScreen = ({ error }: { error: Error }) => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    backgroundColor: '#f5f5f5',
+    padding: '20px'
+  }}>
+    <div style={{
+      textAlign: 'center',
+      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+      maxWidth: '600px'
+    }}>
+      <h2 style={{ color: '#d32f2f' }}>Initialization Error</h2>
+      <p style={{ marginBottom: '20px' }}>
+        We encountered an error while setting up the application:
+      </p>
+      <pre style={{
+        backgroundColor: '#fff',
+        padding: '15px',
+        borderRadius: '4px',
+        textAlign: 'left',
+        overflow: 'auto',
+        margin: '0 auto',
+        maxWidth: '100%'
+      }}>
+        {error.message}
+      </pre>
+      <p style={{ marginTop: '20px', fontSize: '0.9em', color: '#666' }}>
+        If this error persists, please contact support.
+      </p>
+    </div>
+  </div>
+);
 
 // Component to handle CSP headers and security features
 function SecurityWrapper({ children }: { children: React.ReactNode }) {
@@ -127,9 +178,19 @@ function SecurityWrapper({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  // Get Clerk publishable key from environment variables
+  const clerkPubKey = 'pk_test_YWN0dWFsLWR1Y2stNjMuY2xlcmsuYWNjb3VudHMuZGV2JA';
+
+  // Log environment variables for debugging
+  console.log('Environment Variables:', {
+    VITE_CLERK_PUBLISHABLE_KEY: import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
+    NODE_ENV: import.meta.env.MODE,
+    BASE_URL: import.meta.env.BASE_URL,
+  });
+
   return (
     <ClerkProvider
-      publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
+      publishableKey={clerkPubKey}
       appearance={{
         layout: {
           logoPlacement: 'none',
@@ -141,201 +202,185 @@ function App() {
           colorTextOnPrimaryBackground: 'white',
         },
       }}
-      localization={{
-        socialButtonsBlockButton: 'Continue with {{provider|titleize}}',
-        formFieldLabel__emailAddress: 'Email',
-        formFieldLabel__emailAddresses: 'Email addresses',
-        formFieldLabel__phoneNumber: 'Phone number',
-        formFieldLabel__username: 'Username',
-        formFieldLabel__firstName: 'First name',
-        formFieldLabel__lastName: 'Last name',
-        formFieldLabel__password: 'Password',
-        formFieldLabel__currentPassword: 'Current password',
-        formFieldLabel__newPassword: 'New password',
-        formFieldLabel__confirmPassword: 'Confirm password',
-        formFieldLabel__signOutOfOtherSessions: 'Sign out of all other sessions',
-        formFieldLabel__automaticInvitations: 'Enable automatic invitations',
-        formFieldLabel__organizationName: 'Organization name',
-        formFieldLabel__organizationSlug: 'Organization URL',
-        formFieldLabel__organizationDomain: 'Domain',
-        formFieldLabel__organizationDomainEmailAddress: 'Verification email',
-        formFieldLabel__organizationDomainEmailAddressDescription:
-          'Enter an email address under this domain to receive a verification code and verify this domain.',
-      }}
     >
-      <SecurityWrapper>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <BrowserRouter>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/sign-in/*" element={<SignIn />} />
-            <Route path="/auth/sso-callback" element={<SSOCallback />} />
+      <ClerkLoading>
+        <LoadingScreen />
+      </ClerkLoading>
+      <ClerkLoaded>
+        <SecurityWrapper>
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <BrowserRouter>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/sign-in/*" element={<SignIn />} />
+                <Route path="/auth/sso-callback" element={<SSOCallback />} />
 
-            {/* Error Pages */}
-            <Route path="/404" element={<NotFound />} />
-            <Route path="/500" element={<ServerError />} />
+                {/* Error Pages */}
+                <Route path="/404" element={<NotFound />} />
+                <Route path="/500" element={<ServerError />} />
 
-            {/* Legal Pages */}
-            <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/cookies" element={<CookiePolicy />} />
-            <Route path="/security" element={<SecurityPolicy />} />
-            <Route path="/accessibility" element={<AccessibilityStatement />} />
+                {/* Legal Pages */}
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/cookies" element={<CookiePolicy />} />
+                <Route path="/security" element={<SecurityPolicy />} />
+                <Route path="/accessibility" element={<AccessibilityStatement />} />
 
-            {/* Info Pages */}
-            <Route path="/about" element={<AboutUs />} />
-            <Route path="/contact" element={<ContactUs />} />
-            <Route path="/faq" element={<FAQ />} />
+                {/* Info Pages */}
+                <Route path="/about" element={<AboutUs />} />
+                <Route path="/contact" element={<ContactUs />} />
+                <Route path="/faq" element={<FAQ />} />
 
-            {/* User Pages */}
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
+                {/* User Pages */}
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  }
+                />
 
-            {/* Retail Routes */}
-            <Route
-              path="/retail"
-              element={
-                <ProtectedRoute userType="retail">
-                  <RetailLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route
-                index
-                element={
-                  <ProtectedRoute userType="retail" requireOnboarding>
-                    <RetailHome />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="onboarding"
-                element={
-                  <ProtectedRoute userType="retail" requireOnboarding={false}>
-                    <RetailOnboarding />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="book"
-                element={
-                  <ProtectedRoute userType="retail" requireOnboarding>
-                    <Book />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="track" element={<Track />} />
-              <Route
-                path="payment"
-                element={
-                  <ProtectedRoute userType="retail" requireOnboarding>
-                    <Payment />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="pod"
-                element={
-                  <ProtectedRoute userType="retail" requireOnboarding>
-                    <ProofOfDeliveryPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="help" element={<Help />} />
-              <Route path="*" element={<Navigate to="/retail" replace />} />
-            </Route>
+                {/* Retail Routes */}
+                <Route
+                  path="/retail"
+                  element={
+                    <ProtectedRoute userType="retail">
+                      <RetailLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route
+                    index
+                    element={
+                      <ProtectedRoute userType="retail" requireOnboarding>
+                        <RetailHome />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="onboarding"
+                    element={
+                      <ProtectedRoute userType="retail" requireOnboarding={false}>
+                        <RetailOnboarding />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="book"
+                    element={
+                      <ProtectedRoute userType="retail" requireOnboarding>
+                        <Book />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="track" element={<Track />} />
+                  <Route
+                    path="payment"
+                    element={
+                      <ProtectedRoute userType="retail" requireOnboarding>
+                        <Payment />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="pod"
+                    element={
+                      <ProtectedRoute userType="retail" requireOnboarding>
+                        <ProofOfDeliveryPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="help" element={<Help />} />
+                  <Route path="*" element={<Navigate to="/retail" replace />} />
+                </Route>
 
-            {/* Corporate Routes */}
-            <Route
-              path="/corporate"
-              element={
-                <ProtectedRoute userType="corporate" requireOrganization>
-                  <MainLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route
-                index
-                element={
-                  <ProtectedRoute userType="corporate" requireOnboarding requireOrganization>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="onboarding"
-                element={
-                  <ProtectedRoute userType="corporate" requireOnboarding={false}>
-                    <CorporateOnboarding />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="events"
-                element={
-                  <ProtectedRoute userType="corporate" requireOnboarding requireOrganization>
-                    <Events />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="inventory"
-                element={
-                  <ProtectedRoute userType="corporate" requireOnboarding requireOrganization>
-                    <Inventory />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="logistics"
-                element={
-                  <ProtectedRoute userType="corporate" requireOnboarding requireOrganization>
-                    <Logistics />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="reports"
-                element={
-                  <ProtectedRoute userType="corporate" requireOnboarding requireOrganization>
-                    <Reports />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="users"
-                element={
-                  <ProtectedRoute userType="corporate" requireOnboarding requireOrganization>
-                    <Users />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="settings"
-                element={
-                  <ProtectedRoute userType="corporate" requireOnboarding requireOrganization>
-                    <Settings />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="*" element={<Navigate to="/corporate" replace />} />
-            </Route>
+                {/* Corporate Routes */}
+                <Route
+                  path="/corporate"
+                  element={
+                    <ProtectedRoute userType="corporate" requireOrganization>
+                      <MainLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route
+                    index
+                    element={
+                      <ProtectedRoute userType="corporate" requireOnboarding requireOrganization>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="onboarding"
+                    element={
+                      <ProtectedRoute userType="corporate" requireOnboarding={false}>
+                        <CorporateOnboarding />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="events"
+                    element={
+                      <ProtectedRoute userType="corporate" requireOnboarding requireOrganization>
+                        <Events />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="inventory"
+                    element={
+                      <ProtectedRoute userType="corporate" requireOnboarding requireOrganization>
+                        <Inventory />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="logistics"
+                    element={
+                      <ProtectedRoute userType="corporate" requireOnboarding requireOrganization>
+                        <Logistics />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="reports"
+                    element={
+                      <ProtectedRoute userType="corporate" requireOnboarding requireOrganization>
+                        <Reports />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="users"
+                    element={
+                      <ProtectedRoute userType="corporate" requireOnboarding requireOrganization>
+                        <Users />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="settings"
+                    element={
+                      <ProtectedRoute userType="corporate" requireOnboarding requireOrganization>
+                        <Settings />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="*" element={<Navigate to="/corporate" replace />} />
+                </Route>
 
-            {/* Catch All */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-          <ChatWidget />
-        </BrowserRouter>
-      </ThemeProvider>
-      </SecurityWrapper>
+                {/* Catch All */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+              <ChatWidget />
+            </BrowserRouter>
+          </ThemeProvider>
+        </SecurityWrapper>
+      </ClerkLoaded>
     </ClerkProvider>
   );
 }
