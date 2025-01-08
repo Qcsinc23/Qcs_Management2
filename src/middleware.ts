@@ -3,50 +3,73 @@ import { fetchOrganizationDetails, OrganizationDetails } from './services/organi
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
+// Generate a random nonce
+export function generateNonce() {
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+// Store the current nonce
+let currentNonce = generateNonce();
+
+// Function to get the current nonce
+export function getCurrentNonce() {
+  return currentNonce;
+}
+
+// Function to refresh the nonce
+export function refreshNonce() {
+  currentNonce = generateNonce();
+  return currentNonce;
+}
+
 // Enhanced CSP configuration for Clerk with additional security headers
-export const SECURITY_HEADERS = {
-  'Content-Security-Policy': `
-    default-src 'self';
-    script-src 
-      'self' 
-      'unsafe-inline' 
-      'unsafe-eval' 
-      https://*.clerk.com 
-      https://*.clerk.accounts.dev 
-      https://*.stripe.com
-      https://js.stripe.com
-      https://clerk.com
-      https://accounts.clerk.com
-      https://*.clerk.dev;
-    connect-src 
-      'self' 
-      https://*.clerk.com 
-      https://*.clerk.accounts.dev 
-      https://api.stripe.com
-      https://checkout.stripe.com
-      https://clerk.com
-      https://accounts.clerk.com
-      https://*.clerk.dev
-      wss://*.clerk.com
-      wss://*.clerk.accounts.dev;
-    img-src 
-      'self' 
-      https://*.clerk.com 
-      https://*.clerk.accounts.dev 
-      https://clerk.com
-      https://accounts.clerk.com
-      data: 
-      https: 
-      blob:;
-    style-src 
-      'self' 
-      'unsafe-inline' 
-      https://*.clerk.com 
-      https://*.clerk.accounts.dev 
-      https://clerk.com
-      https://accounts.clerk.com
-      https://fonts.googleapis.com
-      https://js.stripe.com;
+export function getSecurityHeaders() {
+  return {
+    'Content-Security-Policy': `
+      default-src 'self';
+      script-src 
+        'self' 
+        'unsafe-inline' 
+        'unsafe-eval' 
+        https://*.clerk.com 
+        https://*.clerk.accounts.dev 
+        https://*.stripe.com
+        https://js.stripe.com
+        https://clerk.com
+        https://accounts.clerk.com
+        https://*.clerk.dev;
+      connect-src 
+        'self' 
+        https://*.clerk.com 
+        https://*.clerk.accounts.dev 
+        https://api.stripe.com
+        https://checkout.stripe.com
+        https://clerk.com
+        https://accounts.clerk.com
+        https://*.clerk.dev
+        wss://*.clerk.com
+        wss://*.clerk.accounts.dev;
+      img-src 
+        'self' 
+        https://*.clerk.com 
+        https://*.clerk.accounts.dev 
+        https://clerk.com
+        https://accounts.clerk.com
+        data: 
+        https: 
+        blob:;
+      style-src 
+        'self' 
+        'nonce-${currentNonce}' 
+        https://*.clerk.com 
+        https://*.clerk.accounts.dev 
+        https://clerk.com
+        https://accounts.clerk.com
+        https://fonts.googleapis.com
+        https://js.stripe.com
+        https://*.mui.com;
     font-src 
       'self' 
       https://*.clerk.com 
@@ -72,20 +95,22 @@ export const SECURITY_HEADERS = {
     worker-src 'self' blob:;
     media-src 'self' blob: data:;
   `.replace(/\n/g, ' ').replace(/\s{2,}/g, ' ').trim(),
-  'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
-  'X-XSS-Protection': '1; mode=block',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'geolocation=(), microphone=(), camera=()'
-};
+    'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'X-XSS-Protection': '1; mode=block',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'geolocation=(), microphone=(), camera=()'
+  };
+}
 
 // Export security headers for server-side use
-export const CSP_HEADERS = SECURITY_HEADERS;
+export const SECURITY_HEADERS = getSecurityHeaders();
 
 // Apply security headers to all responses
 export const applySecurityHeaders = (response: Response) => {
-  Object.entries(SECURITY_HEADERS).forEach(([header, value]) => {
+  const headers = getSecurityHeaders();
+  Object.entries(headers).forEach(([header, value]) => {
     response.headers.set(header, value);
   });
   return response;

@@ -4,7 +4,7 @@ import { ClerkProvider, ClerkLoaded, ClerkLoading } from '@clerk/clerk-react';
 import { useEffect } from 'react';
 
 // Security headers from middleware
-import { SECURITY_HEADERS, applySecurityHeaders } from './middleware';
+import { getSecurityHeaders, applySecurityHeaders, refreshNonce } from './middleware';
 
 // Layouts
 import MainLayout from './layouts/MainLayout';
@@ -95,67 +95,59 @@ const Reports = () => <div>Reports Page</div>;
 const Users = () => <div>Users Page</div>;
 const Settings = () => <div>Settings Page</div>;
 
+import { createStyledElement, commonStyles } from './utils/styles';
+
 // Loading component
-const LoadingScreen = () => (
-  <div style={{
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '100vh',
-    backgroundColor: '#f5f5f5'
-  }}>
-    <div style={{
-      textAlign: 'center',
-      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif'
-    }}>
-      <h2>Loading QCS Management...</h2>
-      <p>Please wait while we initialize the application.</p>
+const LoadingScreen = () => {
+  const containerProps = createStyledElement(commonStyles.loadingContainer);
+  const contentProps = createStyledElement(commonStyles.loadingContent);
+
+  return (
+    <div {...containerProps}>
+      <div {...contentProps}>
+        <h2>Loading QCS Management...</h2>
+        <p>Please wait while we initialize the application.</p>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Error component
-const ErrorScreen = ({ error }: { error: Error }) => (
-  <div style={{
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '100vh',
-    backgroundColor: '#f5f5f5',
-    padding: '20px'
-  }}>
-    <div style={{
-      textAlign: 'center',
-      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-      maxWidth: '600px'
-    }}>
-      <h2 style={{ color: '#d32f2f' }}>Initialization Error</h2>
-      <p style={{ marginBottom: '20px' }}>
-        We encountered an error while setting up the application:
-      </p>
-      <pre style={{
-        backgroundColor: '#fff',
-        padding: '15px',
-        borderRadius: '4px',
-        textAlign: 'left',
-        overflow: 'auto',
-        margin: '0 auto',
-        maxWidth: '100%'
-      }}>
-        {error.message}
-      </pre>
-      <p style={{ marginTop: '20px', fontSize: '0.9em', color: '#666' }}>
-        If this error persists, please contact support.
-      </p>
+const ErrorScreen = ({ error }: { error: Error }) => {
+  const containerProps = createStyledElement(commonStyles.errorContainer);
+  const contentProps = createStyledElement(commonStyles.errorContent);
+  const headingProps = createStyledElement(commonStyles.errorHeading);
+  const messageProps = createStyledElement(commonStyles.errorMessage);
+  const preProps = createStyledElement(commonStyles.errorPre);
+  const footerProps = createStyledElement(commonStyles.errorFooter);
+
+  return (
+    <div {...containerProps}>
+      <div {...contentProps}>
+        <h2 {...headingProps}>Initialization Error</h2>
+        <p {...messageProps}>
+          We encountered an error while setting up the application:
+        </p>
+        <pre {...preProps}>
+          {error.message}
+        </pre>
+        <p {...footerProps}>
+          If this error persists, please contact support.
+        </p>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Component to handle CSP headers and security features
 function SecurityWrapper({ children }: { children: React.ReactNode }) {
   const location = useLocation();
 
   useEffect(() => {
+    // Refresh nonce and get new headers on location change
+    refreshNonce();
+    const headers = getSecurityHeaders();
+
     // Apply security headers to all responses
     const originalFetch = window.fetch;
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -163,14 +155,19 @@ function SecurityWrapper({ children }: { children: React.ReactNode }) {
       return applySecurityHeaders(response);
     };
 
-    // Add security headers to document
-    Object.entries(SECURITY_HEADERS).forEach(([header, value]) => {
-      document.documentElement.style.setProperty(`--${header.toLowerCase()}`, value);
-    });
+    // Add CSP meta tag to document head
+    let cspMeta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+    if (!cspMeta) {
+      cspMeta = document.createElement('meta');
+      cspMeta.setAttribute('http-equiv', 'Content-Security-Policy');
+      document.head.appendChild(cspMeta);
+    }
+    cspMeta.setAttribute('content', headers['Content-Security-Policy']);
 
     // Cleanup
     return () => {
       window.fetch = originalFetch;
+      cspMeta?.remove();
     };
   }, [location]);
 
@@ -207,10 +204,10 @@ function App() {
         <LoadingScreen />
       </ClerkLoading>
       <ClerkLoaded>
-        <SecurityWrapper>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <BrowserRouter>
+        <BrowserRouter>
+          <SecurityWrapper>
+            <ThemeProvider theme={theme}>
+              <CssBaseline />
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<LandingPage />} />
@@ -377,9 +374,9 @@ function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
               <ChatWidget />
-            </BrowserRouter>
-          </ThemeProvider>
-        </SecurityWrapper>
+            </ThemeProvider>
+          </SecurityWrapper>
+        </BrowserRouter>
       </ClerkLoaded>
     </ClerkProvider>
   );
