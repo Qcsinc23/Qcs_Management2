@@ -148,26 +148,22 @@ function SecurityWrapper({ children }: { children: React.ReactNode }) {
     refreshNonce();
     const headers = getSecurityHeaders();
 
-    // Apply security headers to all responses
+    // Apply security headers to non-Clerk responses
     const originalFetch = window.fetch;
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : input.toString();
       const response = await originalFetch(input, init || {});
-      return applySecurityHeaders(response);
+      
+      // Skip Clerk requests to prevent header conflicts
+      if (!url.includes('clerk.com')) {
+        return applySecurityHeaders(response);
+      }
+      return response;
     };
-
-    // Add CSP meta tag to document head
-    let cspMeta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
-    if (!cspMeta) {
-      cspMeta = document.createElement('meta');
-      cspMeta.setAttribute('http-equiv', 'Content-Security-Policy');
-      document.head.appendChild(cspMeta);
-    }
-    cspMeta.setAttribute('content', headers['Content-Security-Policy']);
 
     // Cleanup
     return () => {
       window.fetch = originalFetch;
-      cspMeta?.remove();
     };
   }, [location]);
 

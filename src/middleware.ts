@@ -60,16 +60,7 @@ export function getSecurityHeaders() {
         data: 
         https: 
         blob:;
-      style-src 
-        'self' 
-        'nonce-${currentNonce}' 
-        https://*.clerk.com 
-        https://*.clerk.accounts.dev 
-        https://clerk.com
-        https://accounts.clerk.com
-        https://fonts.googleapis.com
-        https://js.stripe.com
-        https://*.mui.com;
+      style-src 'self' 'unsafe-inline' 'nonce-${currentNonce}' https://*.clerk.com https://*.clerk.accounts.dev https://clerk.com https://accounts.clerk.com https://fonts.googleapis.com https://js.stripe.com https://*.mui.com;
     font-src 
       'self' 
       https://*.clerk.com 

@@ -7,80 +7,100 @@ export default defineConfig({
     react(),
     csp({
       policy: {
-        'base-uri': ['self'],
-        'default-src': ['self'],
+        'base-uri': ["'self'"],
+        'default-src': ["'self'"],
         'script-src': [
-          'self',
-          'unsafe-inline',
-          'unsafe-eval',
-          'https://*.clerk.com',
-          'https://*.clerk.accounts.dev',
-          'https://*.stripe.com',
-          'https://js.stripe.com',
-          'https://accounts.clerk.com',
-          'https://clerk.com'
+          "'self'",
+          "'unsafe-eval'",
+          "'unsafe-inline'", // Required for development
+          "https://*.stripe.com",
+          "https://*.clerk.dev",
+          "https://*.clerk.com",
+          "https://*.clerk.accounts.dev",
+          "https://clerk.com",
+          "https://accounts.clerk.com",
+          "https://*.firebase.com",
+          "https://*.firebaseio.com",
+          "https://*.supabase.co",
+          "https://*.supabase.in"
         ],
         'connect-src': [
-          'self',
-          'https://*.clerk.com',
-          'https://*.clerk.accounts.dev',
-          'wss://*.clerk.com',
-          'wss://*.clerk.accounts.dev',
-          'https://api.stripe.com',
-          'https://checkout.stripe.com',
-          'https://accounts.clerk.com',
-          'https://clerk.com',
-          'ws://localhost:*',
-          'http://localhost:*'
+          "'self'",
+          "ws://localhost:*", // Required for HMR
+          "http://localhost:*", // Required for development
+          "https://*.stripe.com",
+          "https://api.stripe.com",
+          "https://checkout.stripe.com",
+          "https://*.clerk.dev",
+          "https://*.clerk.com",
+          "https://*.clerk.accounts.dev",
+          "https://clerk.com",
+          "https://accounts.clerk.com",
+          "wss://*.clerk.com",
+          "wss://*.clerk.accounts.dev",
+          "https://*.firebase.com",
+          "https://*.firebaseio.com",
+          "https://*.supabase.co",
+          "https://*.supabase.in",
+          "wss://*.supabase.co",
+          "wss://*.supabase.in"
         ],
         'img-src': [
-          'self',
-          'https://*.clerk.com',
-          'https://*.clerk.accounts.dev',
-          'https://accounts.clerk.com',
-          'https://clerk.com',
-          'data:',
-          'blob:'
-        ],
-        'frame-src': [
-          'self',
-          'https://*.clerk.com',
-          'https://*.clerk.accounts.dev',
-          'https://*.stripe.com',
-          'https://js.stripe.com',
-          'https://checkout.stripe.com',
-          'https://accounts.clerk.com',
-          'https://clerk.com',
-          'blob:',
-          'data:'
+          "'self'",
+          "data:",
+          "blob:",
+          "https:",
+          "https://*.clerk.dev",
+          "https://*.clerk.com",
+          "https://*.clerk.accounts.dev",
+          "https://clerk.com",
+          "https://accounts.clerk.com",
+          "https://*.supabase.co",
+          "https://*.supabase.in",
+          "https://images.clerk.dev"
         ],
         'style-src': [
-          'self',
-          'unsafe-inline',
-          'https://fonts.googleapis.com',
-          'https://js.stripe.com',
-          'https://*.clerk.com',
-          'https://*.clerk.accounts.dev',
-          'https://accounts.clerk.com',
-          'https://clerk.com',
-          'https://*.mui.com'
+          "'self'",
+          "'unsafe-inline'", // Required for MUI and development
+          "https://fonts.googleapis.com",
+          "https://*.clerk.dev",
+          "https://*.clerk.com",
+          "https://*.clerk.accounts.dev",
+          "https://clerk.com",
+          "https://accounts.clerk.com",
+          "https://js.stripe.com",
+          "https://*.mui.com"
         ],
         'font-src': [
-          'self',
-          'https://fonts.gstatic.com',
-          'https://*.clerk.com',
-          'https://*.clerk.accounts.dev',
-          'https://accounts.clerk.com',
-          'https://clerk.com',
-          'data:'
+          "'self'",
+          "data:",
+          "https://fonts.gstatic.com",
+          "https://*.clerk.dev",
+          "https://*.clerk.com",
+          "https://*.clerk.accounts.dev",
+          "https://clerk.com",
+          "https://accounts.clerk.com",
+          "https://js.stripe.com"
         ],
-        'worker-src': [
-          'self',
-          'blob:'
+        'frame-src': [
+          "'self'",
+          "https://*.stripe.com",
+          "https://js.stripe.com",
+          "https://checkout.stripe.com",
+          "https://*.clerk.dev",
+          "https://*.clerk.com",
+          "https://*.clerk.accounts.dev",
+          "https://clerk.com",
+          "https://accounts.clerk.com"
         ],
-        'manifest-src': ['self'],
-        'media-src': ['self', 'blob:', 'data:']
-      }
+        'object-src': ["'none'"],
+        'manifest-src': ["'self'"],
+        'worker-src': ["'self'", "blob:"],
+        'media-src': ["'self'", "blob:", "data:"],
+        'frame-ancestors': ["'self'"],
+        'form-action': ["'self'"],
+        'report-uri': ['/csp-report']
+      } as any
     })
   ],
   optimizeDeps: {
