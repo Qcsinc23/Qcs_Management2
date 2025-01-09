@@ -15,8 +15,9 @@ import {
   StepLabel,
   useTheme,
   Alert,
+  CircularProgress,
 } from '@mui/material';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser, useClerk } from '@clerk/clerk-react';
 
@@ -25,10 +26,12 @@ type OnboardingStep = 'personal' | 'preferences' | 'review';
 export default function RetailOnboarding() {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, isLoaded: userLoaded } = useUser();
   const { session } = useClerk();
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('personal');
+  const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -62,30 +65,65 @@ export default function RetailOnboarding() {
     }
   };
 
-  const handleSubmit = async () => {
-    try {
-      if (!user) throw new Error('No user found');
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      if (!userLoaded) return;
+      
+      if (!user) {
+        navigate('/sign-in?userType=retail');
+        return;
+      }
 
-      // Update user's basic information
+      // Check if user is already onboarded
+      if (user.unsafeMetadata?.onboardingComplete === true) {
+        navigate('/retail');
+        return;
+      }
+
+      setIsInitializing(false);
+    };
+
+    checkOnboardingStatus();
+  }, [user, userLoaded, navigate]);
+
+  const handleSubmit = async () => {
+    if (!user || !session) {
+      setError('Authentication required. Please sign in.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      // First update basic information
       await user.update({
         firstName: formData.firstName,
         lastName: formData.lastName,
       });
 
-      // Update user's metadata
+      // Then update metadata
       await user.update({
         unsafeMetadata: {
           userType: 'retail',
           onboardingComplete: true,
           preferredContact: formData.preferredContact,
+          updatedAt: new Date().toISOString(),
         },
       });
 
       // Force session token refresh to include new metadata
-      await session?.reload();
+      await session.reload();
+
+      // Add a small delay to ensure all updates are processed
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       navigate('/retail');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to complete onboarding');
+      console.error('Onboarding error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to complete onboarding. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -149,6 +187,14 @@ export default function RetailOnboarding() {
     }
   };
 
+  if (isInitializing) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
     <Container maxWidth="md">
       <Box sx={{ py: 4 }}>
@@ -187,9 +233,9 @@ export default function RetailOnboarding() {
             <Button
               variant="contained"
               onClick={handleSubmit}
-              disabled={!formData.firstName || !formData.lastName}
+              disabled={!formData.firstName || !formData.lastName || isSubmitting}
             >
-              Complete Onboarding
+              {isSubmitting ? 'Submitting...' : 'Complete Onboarding'}
             </Button>
           ) : (
             <Button
