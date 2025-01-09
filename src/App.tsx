@@ -176,7 +176,7 @@ function SecurityWrapper({ children }: { children: React.ReactNode }) {
 
 function App() {
   // Get Clerk publishable key from environment variables
-  const clerkPubKey = 'pk_test_YWN0dWFsLWR1Y2stNjMuY2xlcmsuYWNjb3VudHMuZGV2JA';
+  const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
   // Log environment variables for debugging
   console.log('Environment Variables:', {

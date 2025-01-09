@@ -1,4 +1,4 @@
-import { Grid, Card, CardContent, Typography, Box } from '@mui/material';
+import { Grid, Typography, Box } from '@mui/material';
 import {
   Timeline as TimelineIcon,
   LocalShipping as DeliveryIcon,
@@ -6,53 +6,51 @@ import {
   Assignment as TaskIcon,
   TrendingUp as MetricsIcon,
 } from '@mui/icons-material';
+import { useState } from 'react';
+import DashboardCard from '../components/dashboard/DashboardCard';
+import Chart from '../components/dashboard/Chart';
 
-interface DashboardCardProps {
-  title: string;
-  value: string;
-  icon: React.ReactNode;
-  color: string;
-}
+const options = {
+  responsive: true,
+  plugins: {
+    legend: {
+      position: 'top' as const,
+    },
+    title: {
+      display: true,
+      text: 'Key Performance Indicators',
+    },
+  },
+};
 
-const DashboardCard = ({ title, value, icon, color }: DashboardCardProps) => (
-  <Card 
-    sx={{ 
-      height: '100%',
-    }}
-  >
-    <CardContent>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <Box
-          sx={{
-            backgroundColor: `${color}20`,
-            borderRadius: '50%',
-            p: 1,
-            mr: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {icon}
-        </Box>
-        <Typography variant="h6" component="div">
-          {title}
-        </Typography>
-      </Box>
-      <Typography variant="h4" component="div" sx={{ textAlign: 'center', mt: 2 }}>
-        {value}
-      </Typography>
-    </CardContent>
-  </Card>
-);
+const labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July'];
+
+const chartData = {
+  labels,
+  datasets: [
+    {
+      label: 'Sales',
+      data: labels.map(() => Math.random() * 1000),
+      borderColor: 'rgb(255, 99, 132)',
+      backgroundColor: 'rgba(255, 99, 132, 0.5)',
+    },
+    {
+      label: 'Expenses',
+      data: labels.map(() => Math.random() * 500),
+      borderColor: 'rgb(53, 162, 235)',
+      backgroundColor: 'rgba(53, 162, 235, 0.5)',
+    },
+  ],
+};
 
 export default function Dashboard() {
+
   return (
     <Box>
       <Typography variant="h4" sx={{ mb: 4 }}>
         Dashboard
       </Typography>
-      
+
       <Grid container spacing={3}>
         <Grid item xs={12} sm={6} md={4}>
           <DashboardCard
@@ -62,16 +60,17 @@ export default function Dashboard() {
             color="#2196f3"
           />
         </Grid>
-        
+
         <Grid item xs={12} sm={6} md={4}>
           <DashboardCard
             title="Active Deliveries"
             value="8"
             icon={<DeliveryIcon sx={{ color: '#4caf50' }} />}
             color="#4caf50"
+            progress={60}
           />
         </Grid>
-        
+
         <Grid item xs={12} sm={6} md={4}>
           <DashboardCard
             title="Inventory Alerts"
@@ -80,16 +79,17 @@ export default function Dashboard() {
             color="#f44336"
           />
         </Grid>
-        
+
         <Grid item xs={12} sm={6} md={6}>
           <DashboardCard
             title="Task Assignments"
             value="15"
             icon={<TaskIcon sx={{ color: '#ff9800' }} />}
             color="#ff9800"
+            progress={80}
           />
         </Grid>
-        
+
         <Grid item xs={12} sm={6} md={6}>
           <DashboardCard
             title="Performance Metrics"
@@ -97,6 +97,10 @@ export default function Dashboard() {
             icon={<MetricsIcon sx={{ color: '#9c27b0' }} />}
             color="#9c27b0"
           />
+        </Grid>
+
+        <Grid item xs={12}>
+          <Chart options={options} data={chartData} />
         </Grid>
       </Grid>
     </Box>

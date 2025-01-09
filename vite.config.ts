@@ -12,7 +12,7 @@ export default defineConfig({
         'script-src': [
           'self',
           'unsafe-inline',
-          'unsafe-eval', // Required for development tools and certain libraries
+          'unsafe-eval',
           'https://*.clerk.com',
           'https://*.clerk.accounts.dev',
           'https://*.stripe.com',
@@ -30,8 +30,8 @@ export default defineConfig({
           'https://checkout.stripe.com',
           'https://accounts.clerk.com',
           'https://clerk.com',
-          'ws://localhost:*', // For development hot reload
-          'http://localhost:*' // For local development API calls
+          'ws://localhost:*',
+          'http://localhost:*'
         ],
         'img-src': [
           'self',
@@ -50,17 +50,20 @@ export default defineConfig({
           'https://js.stripe.com',
           'https://checkout.stripe.com',
           'https://accounts.clerk.com',
-          'https://clerk.com'
+          'https://clerk.com',
+          'blob:',
+          'data:'
         ],
         'style-src': [
           'self',
-          'unsafe-inline', // Required for styled-components and MUI
+          'unsafe-inline',
           'https://fonts.googleapis.com',
           'https://js.stripe.com',
           'https://*.clerk.com',
           'https://*.clerk.accounts.dev',
           'https://accounts.clerk.com',
-          'https://clerk.com'
+          'https://clerk.com',
+          'https://*.mui.com'
         ],
         'font-src': [
           'self',
@@ -81,13 +84,16 @@ export default defineConfig({
     })
   ],
   optimizeDeps: {
-    exclude: ['lucide-react'],
+    include: ['lucide-react'],
   },
   server: {
     port: 5175,
-    strictPort: false, // Allow Vite to find next available port
+    strictPort: true,
     open: true,
     cors: true,
+    hmr: {
+      port: 5175,
+    },
     headers: {
       'X-Frame-Options': 'SAMEORIGIN',
       'Referrer-Policy': 'strict-origin-when-cross-origin',

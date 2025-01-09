@@ -63,6 +63,19 @@ img {
   display: block;
 }
 
+/* Preserve icon colors */
+svg {
+  fill: currentColor;
+}
+
+.MuiSvgIcon-root {
+  fill: currentColor;
+}
+
+.icon {
+  fill: currentColor;
+}
+
 /* Ensure proper form element styling */
 input,
 textarea,

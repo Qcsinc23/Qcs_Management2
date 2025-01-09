@@ -11,6 +11,33 @@ export interface OrganizationDetails {
   metadata?: Record<string, unknown>;
 }
 
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: 'active' | 'pending';
+}
+
+export async function addTeamMember(member: TeamMember): Promise<void> {
+  try {
+    const response = await fetch('/api/organizations/team-members', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(member)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to add team member: ${response.statusText}`);
+    }
+  } catch (error) {
+    console.error('Error adding team member:', error);
+    throw error;
+  }
+}
+
 export async function fetchOrganizationDetails(organizationId: string, sessionToken: string): Promise<OrganizationDetails> {
   if (!sessionToken) {
     throw new Error('No session token provided');
@@ -48,5 +75,6 @@ export async function fetchOrganizationDetails(organizationId: string, sessionTo
 }
 
 export const organizationService = {
-  fetchDetails: fetchOrganizationDetails
+  fetchDetails: fetchOrganizationDetails,
+  addTeamMember
 };
