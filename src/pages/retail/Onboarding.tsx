@@ -13,7 +13,6 @@ import {
   Stepper,
   Step,
   StepLabel,
-  useTheme,
   Alert,
   CircularProgress,
 } from '@mui/material';
@@ -24,7 +23,6 @@ import { useUser, useClerk } from '@clerk/clerk-react';
 type OnboardingStep = 'personal' | 'preferences' | 'review';
 
 export default function RetailOnboarding() {
-  const theme = useTheme();
   const navigate = useNavigate();
   const { user, isLoaded: userLoaded } = useUser();
   const { session } = useClerk();

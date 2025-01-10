@@ -101,10 +101,19 @@ export const SECURITY_HEADERS = getSecurityHeaders();
 // Apply security headers to all responses
 export const applySecurityHeaders = (response: Response) => {
   const headers = getSecurityHeaders();
+  const newHeaders = new Headers(response.headers);
+  
+  // Add security headers to the new Headers object
   Object.entries(headers).forEach(([header, value]) => {
-    response.headers.set(header, value);
+    newHeaders.set(header, value);
   });
-  return response;
+
+  // Create a new Response with the modified headers
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: newHeaders
+  });
 };
 
 interface OrganizationMetadata {
@@ -231,22 +240,47 @@ export function useAuthMiddleware({
             throw new Error('Session is not available');
           }
 
+          // Debug user metadata state
+          console.log('User Metadata State:', {
+            hasMetadata: !!user.unsafeMetadata,
+            metadataType: typeof user.unsafeMetadata,
+            metadata: user.unsafeMetadata
+          });
+
           // Ensure metadata exists with proper typing
           if (!user.unsafeMetadata || typeof user.unsafeMetadata !== 'object') {
-            await user.update({
-              unsafeMetadata: {
-                userType: '',
-                onboardingComplete: false,
-                currentOrganization: null,
-                metadataVersion: 1
-              }
-            });
-            await session.reload();
-            return; // Allow useEffect to trigger again with updated metadata
+            console.log('Initializing user metadata...');
+            try {
+              const updateResult = await user.update({
+                unsafeMetadata: {
+                  userType: '',
+                  onboardingComplete: false,
+                  currentOrganization: null,
+                  metadataVersion: 1
+                }
+              });
+              console.log('Metadata update result:', updateResult);
+              
+              await session.reload();
+              console.log('Session reloaded after metadata init');
+              return; // Allow useEffect to trigger again with updated metadata
+            } catch (error) {
+              console.error('Failed to initialize metadata:', error);
+              throw error;
+            }
           }
 
+          // Extract and validate user type and onboarding status
           const userType = user.unsafeMetadata.userType as string | undefined;
           const onboardingComplete = user.unsafeMetadata.onboardingComplete as boolean | undefined;
+          
+          console.log('User Status:', {
+            userType,
+            onboardingComplete,
+            allowedTypes: allowedUserTypes,
+            requiresOnboarding: requireOnboarding,
+            currentPath: location.pathname
+          });
 
           // Check if user type is allowed
           if (allowedUserTypes.length > 0) {
@@ -255,10 +289,10 @@ export function useAuthMiddleware({
               const storedType = localStorage.getItem('userType');
               const pathType = location.pathname.split('/')[1];
               
-              // Determine type from most reliable source
+              // Determine type from most reliable source - prioritize stored type over path
               const determinedType = 
-                allowedUserTypes.includes(pathType as 'retail' | 'corporate') ? pathType :
                 storedType && allowedUserTypes.includes(storedType as 'retail' | 'corporate') ? storedType :
+                allowedUserTypes.includes(pathType as 'retail' | 'corporate') ? pathType :
                 null;
 
               if (determinedType) {

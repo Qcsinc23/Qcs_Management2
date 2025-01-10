@@ -52,6 +52,7 @@ import Help from './pages/retail/Help';
 
 // Common Components
 import ChatWidget from './components/common/ChatWidget';
+import NotificationSystem from './components/common/NotificationSystem';
 
 // Create theme instance
 const theme = createTheme({
@@ -112,33 +113,6 @@ const LoadingScreen = () => {
   );
 };
 
-// Error component
-const ErrorScreen = ({ error }: { error: Error }) => {
-  const containerProps = createStyledElement(commonStyles.errorContainer);
-  const contentProps = createStyledElement(commonStyles.errorContent);
-  const headingProps = createStyledElement(commonStyles.errorHeading);
-  const messageProps = createStyledElement(commonStyles.errorMessage);
-  const preProps = createStyledElement(commonStyles.errorPre);
-  const footerProps = createStyledElement(commonStyles.errorFooter);
-
-  return (
-    <div {...containerProps}>
-      <div {...contentProps}>
-        <h2 {...headingProps}>Initialization Error</h2>
-        <p {...messageProps}>
-          We encountered an error while setting up the application:
-        </p>
-        <pre {...preProps}>
-          {error.message}
-        </pre>
-        <p {...footerProps}>
-          If this error persists, please contact support.
-        </p>
-      </div>
-    </div>
-  );
-};
-
 // Component to handle CSP headers and security features
 function SecurityWrapper({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -146,7 +120,6 @@ function SecurityWrapper({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Refresh nonce and get new headers on location change
     refreshNonce();
-    const headers = getSecurityHeaders();
 
     // Apply security headers to non-Clerk responses
     const originalFetch = window.fetch;
@@ -370,6 +343,7 @@ function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
               <ChatWidget />
+              <NotificationSystem />
             </ThemeProvider>
           </SecurityWrapper>
         </BrowserRouter>

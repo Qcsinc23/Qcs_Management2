@@ -8,98 +8,125 @@ export default defineConfig({
     csp({
       policy: {
         'base-uri': ["'self'"],
-        'default-src': ["'self'"],
+        'default-src': [
+          "'self'",
+          "'unsafe-eval'",
+          "'unsafe-inline'",
+          "clerk.accounts.dev",
+          "*.clerk.accounts.dev",
+          "*.clerk.dev",
+          "clerk.dev",
+          "clerk.com",
+          "*.clerk.com",
+          "accounts.clerk.com",
+          "cdn.jsdelivr.net",
+          "fonts.googleapis.com",
+          "fonts.gstatic.com"
+        ],
         'script-src': [
           "'self'",
           "'unsafe-eval'",
-          "'unsafe-inline'", // Required for development
-          "https://*.stripe.com",
-          "https://*.clerk.dev",
-          "https://*.clerk.com",
-          "https://*.clerk.accounts.dev",
-          "https://clerk.com",
-          "https://accounts.clerk.com",
-          "https://*.firebase.com",
-          "https://*.firebaseio.com",
-          "https://*.supabase.co",
-          "https://*.supabase.in"
+          "'unsafe-inline'",
+          "clerk.accounts.dev",
+          "*.clerk.accounts.dev",
+          "*.clerk.dev",
+          "clerk.dev",
+          "clerk.com",
+          "*.clerk.com",
+          "accounts.clerk.com",
+          "*.stripe.com",
+          "cdn.jsdelivr.net"
+        ],
+        'script-src-elem': [
+          "'self'",
+          "'unsafe-eval'",
+          "'unsafe-inline'",
+          "clerk.accounts.dev",
+          "*.clerk.accounts.dev",
+          "*.clerk.dev",
+          "clerk.dev",
+          "clerk.com",
+          "*.clerk.com",
+          "accounts.clerk.com",
+          "*.stripe.com",
+          "cdn.jsdelivr.net"
         ],
         'connect-src': [
           "'self'",
-          "ws://localhost:*", // Required for HMR
-          "http://localhost:*", // Required for development
-          "https://*.stripe.com",
-          "https://api.stripe.com",
-          "https://checkout.stripe.com",
-          "https://*.clerk.dev",
-          "https://*.clerk.com",
-          "https://*.clerk.accounts.dev",
-          "https://clerk.com",
-          "https://accounts.clerk.com",
+          "ws://localhost:*",
+          "http://localhost:*",
+          "clerk.accounts.dev",
+          "*.clerk.accounts.dev",
+          "*.clerk.dev",
+          "clerk.dev",
+          "clerk.com",
+          "*.clerk.com",
+          "accounts.clerk.com",
+          "*.stripe.com",
+          "api.stripe.com",
+          "checkout.stripe.com",
           "wss://*.clerk.com",
-          "wss://*.clerk.accounts.dev",
-          "https://*.firebase.com",
-          "https://*.firebaseio.com",
-          "https://*.supabase.co",
-          "https://*.supabase.in",
-          "wss://*.supabase.co",
-          "wss://*.supabase.in"
+          "wss://*.clerk.accounts.dev"
         ],
         'img-src': [
           "'self'",
           "data:",
           "blob:",
           "https:",
-          "https://*.clerk.dev",
-          "https://*.clerk.com",
-          "https://*.clerk.accounts.dev",
-          "https://clerk.com",
-          "https://accounts.clerk.com",
-          "https://*.supabase.co",
-          "https://*.supabase.in",
-          "https://images.clerk.dev"
+          "clerk.accounts.dev",
+          "*.clerk.accounts.dev",
+          "*.clerk.dev",
+          "clerk.dev",
+          "clerk.com",
+          "*.clerk.com",
+          "accounts.clerk.com",
+          "images.clerk.dev"
         ],
         'style-src': [
           "'self'",
-          "'unsafe-inline'", // Required for MUI and development
-          "https://fonts.googleapis.com",
-          "https://*.clerk.dev",
-          "https://*.clerk.com",
-          "https://*.clerk.accounts.dev",
-          "https://clerk.com",
-          "https://accounts.clerk.com",
-          "https://js.stripe.com",
-          "https://*.mui.com"
+          "'unsafe-inline'",
+          "fonts.googleapis.com",
+          "clerk.accounts.dev",
+          "*.clerk.accounts.dev",
+          "*.clerk.dev",
+          "clerk.dev",
+          "clerk.com",
+          "*.clerk.com",
+          "accounts.clerk.com",
+          "*.stripe.com",
+          "*.mui.com",
+          "cdn.jsdelivr.net"
         ],
         'font-src': [
           "'self'",
           "data:",
-          "https://fonts.gstatic.com",
-          "https://*.clerk.dev",
-          "https://*.clerk.com",
-          "https://*.clerk.accounts.dev",
-          "https://clerk.com",
-          "https://accounts.clerk.com",
-          "https://js.stripe.com"
+          "fonts.gstatic.com",
+          "clerk.accounts.dev",
+          "*.clerk.accounts.dev",
+          "*.clerk.dev",
+          "clerk.dev",
+          "clerk.com",
+          "*.clerk.com",
+          "accounts.clerk.com",
+          "*.stripe.com"
         ],
         'frame-src': [
           "'self'",
-          "https://*.stripe.com",
-          "https://js.stripe.com",
-          "https://checkout.stripe.com",
-          "https://*.clerk.dev",
-          "https://*.clerk.com",
-          "https://*.clerk.accounts.dev",
-          "https://clerk.com",
-          "https://accounts.clerk.com"
+          "clerk.accounts.dev",
+          "*.clerk.accounts.dev",
+          "*.clerk.dev",
+          "clerk.dev",
+          "clerk.com",
+          "*.clerk.com",
+          "accounts.clerk.com",
+          "*.stripe.com",
+          "checkout.stripe.com"
         ],
         'object-src': ["'none'"],
         'manifest-src': ["'self'"],
         'worker-src': ["'self'", "blob:"],
         'media-src': ["'self'", "blob:", "data:"],
-        'frame-ancestors': ["'self'"],
-        'form-action': ["'self'"],
-        'report-uri': ['/csp-report']
+        'form-action': ["'self'"]
       } as any
     })
   ],
@@ -110,16 +137,31 @@ export default defineConfig({
     port: 5175,
     strictPort: true,
     open: true,
-    cors: true,
-    hmr: {
-      port: 5175,
+    cors: {
+      origin: [
+        'http://localhost:5175',
+        'https://clerk.accounts.dev',
+        'https://*.clerk.accounts.dev',
+        'https://*.clerk.dev',
+        'https://clerk.dev',
+        'https://*.clerk.com',
+        'https://clerk.com',
+        'https://accounts.clerk.com'
+      ],
+      methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+      credentials: true,
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', '__clerk_db_jwt']
     },
     headers: {
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, __clerk_db_jwt',
       'X-Frame-Options': 'SAMEORIGIN',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
       'X-Content-Type-Options': 'nosniff',
-      'X-XSS-Protection': '1; mode=block'
+      'X-XSS-Protection': '1; mode=block',
+      'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload'
     }
   }
 });

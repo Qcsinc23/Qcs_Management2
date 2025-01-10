@@ -13,13 +13,12 @@ import {
   Stepper,
   Step,
   StepLabel,
-  useTheme,
-  Alert,
   MenuItem,
   Grid,
   TextFieldProps,
 } from '@mui/material';
-import { useState, ChangeEvent } from 'react';
+import { useState, useEffect } from 'react';
+import useStore from '../../store/useStore';
 import { useNavigate } from 'react-router-dom';
 import { useUser, useClerk } from '@clerk/clerk-react';
 
@@ -68,12 +67,12 @@ const businessTypes = [
 ] as const;
 
 export default function CorporateOnboarding() {
-  const theme = useTheme();
   const navigate = useNavigate();
-  const { user } = useUser();
-  const { session } = useClerk();
+  const { user, isLoaded: isUserLoaded } = useUser();
+  const { session, loaded: isSessionLoaded } = useClerk();
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('company');
-  const [error, setError] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { addNotification } = useStore();
   const [formData, setFormData] = useState<FormData>({
     companyName: '',
     companySize: '',
@@ -147,13 +146,83 @@ export default function CorporateOnboarding() {
     }
   };
 
-  const handleSubmit = async () => {
-    try {
-      if (!user) throw new Error('No user found');
+  useEffect(() => {
+    // Debug auth state
+    console.log('Auth State:', {
+      isUserLoaded,
+      isSessionLoaded,
+      user: user?.id,
+      session: session?.id,
+      currentStep,
+      formDataValid: validateStep(),
+      formData
+    });
 
-      // Update user's metadata
-      await user.update({
+    // Check if button should be enabled
+    if (currentStep === 'review') {
+      console.log('Submit Button State:', {
+        isValid: validateStep(),
+        isSubmitting,
+        canSubmit: validateStep() && !isSubmitting
+      });
+    }
+  }, [isUserLoaded, user, isSessionLoaded, session, currentStep, formData, isSubmitting]);
+
+  const handleSubmit = async () => {
+    console.log('Submit clicked');
+    
+    // Validate auth state
+    if (!isUserLoaded || !isSessionLoaded) {
+      console.error('Auth not ready:', { isUserLoaded, isSessionLoaded });
+      addNotification({ 
+        type: 'error', 
+        message: 'Please wait for authentication to complete.' 
+      });
+      return;
+    }
+
+    if (!user) {
+      console.error('No user found');
+      addNotification({ 
+        type: 'error', 
+        message: 'No user found. Please sign in again.' 
+      });
+      return;
+    }
+
+    if (!session) {
+      console.error('No session found');
+      addNotification({ 
+        type: 'error', 
+        message: 'No active session found. Please sign in again.' 
+      });
+      return;
+    }
+
+    // Validate form data
+    if (!validateStep()) {
+      console.error('Form validation failed');
+      addNotification({
+        type: 'error',
+        message: 'Please complete all required fields.'
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    console.log('Starting submission...');
+    
+    try {
+      console.log('Current form data:', formData);
+      console.log('Updating user metadata...');
+      
+      // Preserve existing metadata while updating
+      const currentMetadata = user.unsafeMetadata || {};
+      console.log('Current metadata before update:', currentMetadata);
+
+      const updateResult = await user.update({
         unsafeMetadata: {
+          ...currentMetadata,
           userType: 'corporate',
           onboardingComplete: true,
           companyName: formData.companyName,
@@ -162,14 +231,48 @@ export default function CorporateOnboarding() {
           businessType: formData.businessType,
           businessContact: formData.businessContact,
           billingPreferences: formData.billingPreferences,
+          lastUpdated: Date.now(),
         },
       });
 
-      // Force session token refresh to include new metadata
-      await session?.reload();
+      console.log('Update result:', {
+        success: !!updateResult,
+        newMetadata: updateResult?.unsafeMetadata,
+        userId: updateResult?.id
+      });
+
+      console.log('Reloading session...');
+      await session.reload();
+      
+      // Verify the update was successful
+      const updatedUser = await user.reload();
+      console.log('Verification:', {
+        onboardingComplete: updatedUser.unsafeMetadata?.onboardingComplete,
+        userType: updatedUser.unsafeMetadata?.userType
+      });
+      
+      addNotification({ 
+        type: 'success', 
+        message: 'Onboarding completed successfully!' 
+      });
+
+      console.log('Navigating to dashboard...');
       navigate('/corporate');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to complete onboarding');
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      console.error('Onboarding error:', {
+        error: err,
+        message: errorMessage,
+        formData,
+        userId: user.id
+      });
+      
+      addNotification({ 
+        type: 'error', 
+        message: `Failed to complete onboarding: ${errorMessage}. Please try again.` 
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -372,11 +475,6 @@ export default function CorporateOnboarding() {
           ))}
         </Stepper>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
 
         {renderStep()}
 
@@ -392,7 +490,7 @@ export default function CorporateOnboarding() {
             <Button
               variant="contained"
               onClick={handleSubmit}
-              disabled={!validateStep()}
+              disabled={!validateStep() || isSubmitting}
             >
               Complete Onboarding
             </Button>
