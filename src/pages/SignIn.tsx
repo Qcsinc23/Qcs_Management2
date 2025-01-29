@@ -81,8 +81,10 @@ export default function SignIn() {
       try {
         await user.update({
           unsafeMetadata: {
+            ...user.unsafeMetadata,
             userType: type,
             onboardingComplete: false,
+            onboardingCompletedAt: null
           },
         });
 
@@ -108,8 +110,10 @@ export default function SignIn() {
       if (!userType && storedType) {
         user.update({
           unsafeMetadata: {
+            ...user.unsafeMetadata,
             userType: storedType,
             onboardingComplete: false,
+            onboardingCompletedAt: null
           },
         }).then(() => {
           session?.reload();

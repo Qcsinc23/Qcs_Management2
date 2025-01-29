@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { BookingDetails } from '../types/logistics';
+import { calculatePricing, saveBooking, generateTrackingNumber } from '../services/logistics';
 
 interface Message {
   id: string;
@@ -29,7 +31,14 @@ interface Notification {
   read: boolean;
 }
 
-interface StoreState {
+interface BookingState {
+  currentBooking: Partial<BookingDetails> | null;
+  bookingStep: number;
+  isProcessing: boolean;
+  error: string | null;
+}
+
+interface StoreState extends BookingState {
   // Events
   events: Event[];
   setEvents: (events: Event[]) => void;
@@ -55,9 +64,25 @@ interface StoreState {
   addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
   markNotificationAsRead: (id: string) => void;
   clearNotifications: () => void;
+
+  // Booking Actions
+  setBookingStep: (step: number) => void;
+  updateBooking: (update: Partial<BookingDetails>) => void;
+  calculateBookingPrice: () => Promise<void>;
+  submitBooking: () => Promise<string>;
+  resetBooking: () => void;
 }
 
-const useStore = create<StoreState>((set) => ({
+const initialBookingState: BookingState = {
+  currentBooking: null,
+  bookingStep: 0,
+  isProcessing: false,
+  error: null,
+};
+
+const useStore = create<StoreState>((set, get) => ({
+  // Initial booking state
+  ...initialBookingState,
   // Events
   events: [],
   setEvents: (events) => set({ events }),
@@ -127,6 +152,87 @@ const useStore = create<StoreState>((set) => ({
       ),
     })),
   clearNotifications: () => set({ notifications: [] }),
+
+  // Booking Actions
+  setBookingStep: (step) => set({ bookingStep: step }),
+  
+  updateBooking: (update) => set((state) => ({
+    currentBooking: {
+      ...state.currentBooking,
+      ...update,
+    },
+    error: null,
+  })),
+
+  calculateBookingPrice: async () => {
+    const state = get();
+    const booking = state.currentBooking;
+
+    if (!booking?.package?.weight || !booking?.service?.type) {
+      return;
+    }
+
+    try {
+      set({ isProcessing: true, error: null });
+      const pricing = await calculatePricing(
+        Number(booking.package.weight),
+        booking.service.type,
+        {
+          insurance: booking.service.insurance || false,
+          priority: booking.service.priority || false,
+        }
+      );
+      set((state) => ({
+        currentBooking: {
+          ...state.currentBooking,
+          pricing,
+        },
+      }));
+    } catch (error) {
+      set({ error: 'Failed to calculate pricing' });
+    } finally {
+      set({ isProcessing: false });
+    }
+  },
+
+  submitBooking: async () => {
+    const state = get();
+    const booking = state.currentBooking as BookingDetails;
+
+    if (!booking) {
+      throw new Error('No booking details available');
+    }
+
+    try {
+      set({ isProcessing: true, error: null });
+      
+      // Generate tracking number if not exists
+      if (!booking.trackingNumber) {
+        booking.trackingNumber = generateTrackingNumber();
+      }
+
+      // Set creation timestamp
+      booking.createdAt = new Date().toISOString();
+      
+      // Set initial status
+      booking.status = 'pending';
+
+      // Save to Supabase
+      const bookingId = await saveBooking(booking);
+
+      // Reset booking state
+      set(initialBookingState);
+
+      return bookingId;
+    } catch (error) {
+      set({ error: 'Failed to submit booking' });
+      throw error;
+    } finally {
+      set({ isProcessing: false });
+    }
+  },
+
+  resetBooking: () => set(initialBookingState),
 }));
 
 export default useStore;

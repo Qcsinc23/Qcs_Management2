@@ -10,7 +10,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { useState } from 'react';
+import { memo } from 'react';
 
 ChartJS.register(
   CategoryScale,
@@ -27,7 +27,7 @@ interface ChartProps {
   options?: any;
 }
 
-const Chart = ({ data, options }: ChartProps) => {
+const Chart = memo(({ data, options }: ChartProps) => {
   return (
     <Card>
       <CardContent>
@@ -35,7 +35,8 @@ const Chart = ({ data, options }: ChartProps) => {
       </CardContent>
     </Card>
   );
-};
+});
 
+Chart.displayName = 'Chart';
 
 export default Chart;

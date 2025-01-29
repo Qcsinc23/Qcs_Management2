@@ -13,25 +13,60 @@ import {
   DialogTitle, 
   DialogContent, 
   DialogActions,
-  Tooltip
+  Tooltip,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  SelectChangeEvent
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
-import { TeamMember } from './TeamManagement';
+import { TeamMember, Role } from '../../services/organization';
 import useNotification from '../common/NotificationService';
 
 interface TeamMemberTableProps {
   members: TeamMember[];
-  onEdit: (member: TeamMember) => Promise<void>;
+  onEdit: (member: TeamMember, newRole: Role) => Promise<void>;
   onRemove: (member: TeamMember) => Promise<void>;
+  loading?: boolean;
 }
 
-export default function TeamMemberTable({ members, onEdit, onRemove }: TeamMemberTableProps) {
+const ROLES: { label: string; value: Role }[] = [
+  { label: 'Admin', value: 'ADMIN' },
+  { label: 'Manager', value: 'MANAGER' },
+  { label: 'Viewer', value: 'VIEWER' }
+];
+
+export default function TeamMemberTable({ members, onEdit, onRemove, loading = false }: TeamMemberTableProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<Role>('VIEWER');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [sortModel, setSortModel] = useState<GridSortModel>([{ field: 'name', sort: 'asc' }]);
   const [filterModel, setFilterModel] = useState<GridFilterModel>({ items: [] });
   const { notifyError } = useNotification();
+
+  const handleEditClick = (member: TeamMember) => {
+    setSelectedMember(member);
+    setSelectedRole(member.role);
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = async () => {
+    if (!selectedMember) return;
+    
+    setIsSubmitting(true);
+    try {
+      await onEdit(selectedMember, selectedRole);
+      setEditDialogOpen(false);
+    } catch (error) {
+      notifyError('Failed to update team member');
+      console.error('Edit error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleRemoveClick = (member: TeamMember) => {
     setSelectedMember(member);
@@ -41,14 +76,14 @@ export default function TeamMemberTable({ members, onEdit, onRemove }: TeamMembe
   const handleConfirmRemove = async () => {
     if (!selectedMember) return;
     
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       await onRemove(selectedMember);
     } catch (error) {
       notifyError('Failed to remove team member');
       console.error('Remove error:', error);
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
       setConfirmOpen(false);
     }
   };
@@ -69,7 +104,7 @@ export default function TeamMemberTable({ members, onEdit, onRemove }: TeamMembe
           <Tooltip title="Edit member">
             <IconButton 
               aria-label="edit"
-              onClick={() => onEdit(params.row)}
+              onClick={() => handleEditClick(params.row)}
               size="small"
             >
               <Edit fontSize="small" />
@@ -119,6 +154,7 @@ export default function TeamMemberTable({ members, onEdit, onRemove }: TeamMembe
         />
       </div>
 
+      {/* Remove Dialog */}
       <Dialog
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
@@ -137,9 +173,60 @@ export default function TeamMemberTable({ members, onEdit, onRemove }: TeamMembe
           <Button 
             onClick={handleConfirmRemove} 
             color="error"
-            disabled={loading}
+            disabled={isSubmitting}
           >
-            {loading ? 'Removing...' : 'Remove'}
+            {isSubmitting ? 'Removing...' : 'Remove'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        aria-labelledby="edit-dialog-title"
+      >
+        <DialogTitle id="edit-dialog-title">
+          Edit Team Member Role
+        </DialogTitle>
+        <DialogContent>
+          <div style={{ minWidth: '300px', marginTop: '16px' }}>
+            {selectedMember && (
+              <>
+                <div style={{ marginBottom: '16px' }}>
+                  <strong>Name:</strong> {selectedMember.name}<br />
+                  <strong>Email:</strong> {selectedMember.email}
+                </div>
+                <FormControl fullWidth>
+                  <InputLabel id="role-select-label">Role</InputLabel>
+                  <Select
+                    labelId="role-select-label"
+                    id="role-select"
+                    value={selectedRole}
+                    label="Role"
+                    onChange={(e: SelectChangeEvent) => setSelectedRole(e.target.value as Role)}
+                  >
+                    {ROLES.map((role) => (
+                      <MenuItem key={role.value} value={role.value}>
+                        {role.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </>
+            )}
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialogOpen(false)}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleEditSubmit}
+            variant="contained"
+            disabled={isSubmitting || !selectedMember || selectedRole === selectedMember.role}
+          >
+            {isSubmitting ? 'Updating...' : 'Update Role'}
           </Button>
         </DialogActions>
       </Dialog>

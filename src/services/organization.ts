@@ -1,4 +1,5 @@
 import { useClerk } from '@clerk/clerk-react';
+import { supabase } from './supabase';
 
 export interface OrganizationDetails {
   id: string;
@@ -11,61 +12,62 @@ export interface OrganizationDetails {
   metadata?: Record<string, unknown>;
 }
 
+export type Role = 'ADMIN' | 'MANAGER' | 'VIEWER';
+
 export interface TeamMember {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role: Role;
   status: 'active' | 'pending';
+  invitedBy?: string;
+  invitedAt?: string;
 }
 
-export async function addTeamMember(member: TeamMember): Promise<void> {
-  try {
-    const response = await fetch('/api/organizations/team-members', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(member)
-    });
+export interface InviteTeamMemberParams {
+  email: string;
+  role: Role;
+  organizationId: string;
+}
 
-    if (!response.ok) {
-      throw new Error(`Failed to add team member: ${response.statusText}`);
-    }
+export async function inviteTeamMember(params: InviteTeamMemberParams): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('team_members')
+      .insert([{
+        organization_id: params.organizationId,
+        email: params.email,
+        role: params.role,
+        status: 'pending',
+        invited_at: new Date().toISOString()
+      }]);
+
+    if (error) throw error;
   } catch (error) {
-    console.error('Error adding team member:', error);
+    console.error('Error inviting team member:', error);
     throw error;
   }
 }
 
-export async function fetchOrganizationDetails(organizationId: string, sessionToken: string): Promise<OrganizationDetails> {
-  if (!sessionToken) {
-    throw new Error('No session token provided');
-  }
-
+export async function fetchOrganizationDetails(organizationId: string): Promise<OrganizationDetails> {
   try {
-    const response = await fetch(`/api/organizations/${organizationId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${sessionToken}`
-      }
-    });
+    const { data, error } = await supabase
+      .from('organizations')
+      .select('*')
+      .eq('id', organizationId)
+      .single();
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch organization: ${response.statusText}`);
-    }
-
-    const data = await response.json();
+    if (error) throw error;
+    if (!data) throw new Error('Organization not found');
     
     return {
       id: data.id,
       name: data.name,
       address: data.address,
-      contactEmail: data.contactEmail,
-      phoneNumber: data.phoneNumber,
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
+      contactEmail: data.contact_email,
+      phoneNumber: data.phone_number,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
       metadata: data.metadata || {}
     };
   } catch (error) {
@@ -74,7 +76,68 @@ export async function fetchOrganizationDetails(organizationId: string, sessionTo
   }
 }
 
+export async function updateTeamMemberRole(organizationId: string, memberId: string, role: Role): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('team_members')
+      .update({ role })
+      .match({ 
+        organization_id: organizationId,
+        id: memberId 
+      });
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error updating member role:', error);
+    throw error;
+  }
+}
+
+export async function removeTeamMember(organizationId: string, memberId: string): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('team_members')
+      .delete()
+      .match({ 
+        organization_id: organizationId,
+        id: memberId 
+      });
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error removing team member:', error);
+    throw error;
+  }
+}
+
+export async function fetchTeamMembers(organizationId: string): Promise<TeamMember[]> {
+  try {
+    const { data, error } = await supabase
+      .from('team_members')
+      .select('*')
+      .eq('organization_id', organizationId);
+
+    if (error) throw error;
+    
+    return data.map(member => ({
+      id: member.id,
+      name: member.name,
+      email: member.email,
+      role: member.role,
+      status: member.status,
+      invitedBy: member.invited_by,
+      invitedAt: member.invited_at
+    }));
+  } catch (error) {
+    console.error('Error fetching team members:', error);
+    throw error;
+  }
+}
+
 export const organizationService = {
   fetchDetails: fetchOrganizationDetails,
-  addTeamMember
+  inviteTeamMember,
+  updateTeamMemberRole,
+  removeTeamMember,
+  fetchTeamMembers
 };

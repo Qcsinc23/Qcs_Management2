@@ -9,9 +9,9 @@ import {
   Settings as SettingIcon,
   Menu as MenuIcon,
 } from '@mui/icons-material';
-import { useState } from 'react';
-import { Link, Outlet } from 'react-router-dom';
-import { UserButton, SignedIn } from '@clerk/clerk-react';
+import { useState, useEffect } from 'react';
+import { Link, Outlet, useLocation } from 'react-router-dom';
+import { UserButton, SignedIn, useUser } from '@clerk/clerk-react';
 import OrganizationSwitcher from '../components/corporate/OrganizationSwitcher';
 
 const drawerWidth = 240;
@@ -29,6 +29,48 @@ const menuItems = [
 export default function MainLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
+  const { user, isLoaded } = useUser();
+  const location = useLocation();
+  const [showNavigation, setShowNavigation] = useState(false);
+
+  useEffect(() => {
+    if (isLoaded && user) {
+      const onboardingComplete = user.unsafeMetadata?.onboardingComplete as boolean;
+      const userType = user.unsafeMetadata?.userType as string;
+      const shouldShowNav = onboardingComplete && userType === 'corporate';
+      
+      // Only update if the value actually changed to prevent unnecessary re-renders
+      if (shouldShowNav !== showNavigation) {
+        setShowNavigation(shouldShowNav);
+      }
+    }
+  }, [isLoaded, user, showNavigation]);
+
+  // If in onboarding, only show the main content without navigation
+  if (location.pathname.includes('/onboarding')) {
+    return (
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          mt: '64px',
+        }}
+      >
+        <AppBar position="fixed">
+          <Toolbar>
+            <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+              QCS Management
+            </Typography>
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
+          </Toolbar>
+        </AppBar>
+        <Outlet />
+      </Box>
+    );
+  }
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -46,6 +88,7 @@ export default function MainLayout() {
             key={item.text}
             component={Link}
             to={item.path}
+            onClick={() => setMobileOpen(false)}
             sx={{
               '&:hover': {
                 backgroundColor: theme.palette.action.hover,
@@ -69,22 +112,28 @@ export default function MainLayout() {
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
+          transition: theme.transitions.create(['margin', 'width'], {
+            easing: theme.transitions.easing.easeOut,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
         }}
       >
         <Toolbar>
-          <IconButton
-            color="inherit"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
+          {showNavigation && (
+            <IconButton
+              color="inherit"
+              edge="start"
+              onClick={handleDrawerToggle}
+              sx={{ mr: 2, display: { sm: 'none' } }}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             QCS Management
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <OrganizationSwitcher />
+            {showNavigation && <OrganizationSwitcher />}
             <SignedIn>
               <UserButton />
             </SignedIn>
@@ -92,41 +141,50 @@ export default function MainLayout() {
         </Toolbar>
       </AppBar>
 
-      <Box
-        component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-      >
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true, // Better open performance on mobile.
-          }}
-          sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              width: drawerWidth,
-            },
+      {showNavigation && (
+        <Box
+          component="nav"
+          sx={{ 
+            width: { sm: drawerWidth }, 
+            flexShrink: { sm: 0 },
+            transition: theme.transitions.create('width', {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.leavingScreen,
+            }),
           }}
         >
-          {drawer}
-        </Drawer>
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              width: drawerWidth,
-            },
-          }}
-          open
-        >
-          {drawer}
-        </Drawer>
-      </Box>
+          <Drawer
+            variant="temporary"
+            open={mobileOpen}
+            onClose={handleDrawerToggle}
+            ModalProps={{
+              keepMounted: true, // Better open performance on mobile.
+            }}
+            sx={{
+              display: { xs: 'block', sm: 'none' },
+              '& .MuiDrawer-paper': {
+                boxSizing: 'border-box',
+                width: drawerWidth,
+              },
+            }}
+          >
+            {drawer}
+          </Drawer>
+          <Drawer
+            variant="permanent"
+            sx={{
+              display: { xs: 'none', sm: 'block' },
+              '& .MuiDrawer-paper': {
+                boxSizing: 'border-box',
+                width: drawerWidth,
+              },
+            }}
+            open
+          >
+            {drawer}
+          </Drawer>
+        </Box>
+      )}
 
       <Box
         component="main"
@@ -134,6 +192,10 @@ export default function MainLayout() {
           flexGrow: 1,
           p: 3,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
+          transition: theme.transitions.create(['margin', 'width'], {
+            easing: theme.transitions.easing.easeOut,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
           mt: '64px',
         }}
       >

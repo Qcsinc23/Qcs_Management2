@@ -225,6 +225,7 @@ export default function CorporateOnboarding() {
           ...currentMetadata,
           userType: 'corporate',
           onboardingComplete: true,
+          onboardingCompletedAt: Date.now(),
           companyName: formData.companyName,
           companySize: formData.companySize,
           industry: formData.industry,

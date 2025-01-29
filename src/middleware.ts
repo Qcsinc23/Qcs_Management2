@@ -256,7 +256,8 @@ export function useAuthMiddleware({
                   userType: '',
                   onboardingComplete: false,
                   currentOrganization: null,
-                  metadataVersion: 1
+                  metadataVersion: 1,
+                  onboardingCompletedAt: null
                 }
               });
               console.log('Metadata update result:', updateResult);
@@ -284,42 +285,44 @@ export function useAuthMiddleware({
 
           // Check if user type is allowed
           if (allowedUserTypes.length > 0) {
-            // If user doesn't have a type yet, check localStorage and URL path
-            if (!userType) {
-              const storedType = localStorage.getItem('userType');
-              const pathType = location.pathname.split('/')[1];
-              
-              // Determine type from most reliable source - prioritize stored type over path
-              const determinedType = 
-                storedType && allowedUserTypes.includes(storedType as 'retail' | 'corporate') ? storedType :
-                allowedUserTypes.includes(pathType as 'retail' | 'corporate') ? pathType :
-                null;
+          // If user doesn't have a type yet, check localStorage and URL path
+          if (!userType) {
+            const storedType = localStorage.getItem('userType');
+            const pathType = location.pathname.split('/')[1];
+            
+            // Determine type from most reliable source - prioritize path over stored type
+            // This ensures the user's selected type during sign-in takes precedence
+            const determinedType = 
+              allowedUserTypes.includes(pathType as 'retail' | 'corporate') ? pathType :
+              storedType && allowedUserTypes.includes(storedType as 'retail' | 'corporate') ? storedType :
+              null;
 
-              if (determinedType) {
-                await user.update({
-                  unsafeMetadata: {
-                    ...user.unsafeMetadata,
-                    userType: determinedType,
-                    onboardingComplete: false
-                  }
-                });
-                await session?.reload();
-                
-                // Store type in localStorage for consistency
-                localStorage.setItem('userType', determinedType);
-                
-                // Redirect to onboarding with proper state
-                navigate(`/${determinedType}/onboarding`, {
-                  state: {
-                    from: location.pathname,
-                    requiresOnboarding: true,
-                    userType: determinedType
-                  },
-                  replace: true
-                });
-                return;
-              }
+            if (determinedType) {
+              await user.update({
+                unsafeMetadata: {
+                  ...user.unsafeMetadata,
+                  userType: determinedType,
+                  onboardingComplete: false,
+                  onboardingCompletedAt: null
+                }
+              });
+              await session?.reload();
+              
+              // Store type in localStorage for consistency
+              localStorage.setItem('userType', determinedType);
+              
+              // Redirect to onboarding with proper state
+              navigate(`/${determinedType}/onboarding`, {
+                state: {
+                  from: location.pathname,
+                  requiresOnboarding: true,
+                  userType: determinedType
+                },
+                replace: true
+              });
+              return;
             }
+          }
               
             // If user has a type that's not allowed, redirect with proper state
             if (userType && !allowedUserTypes.includes(userType as 'retail' | 'corporate')) {
@@ -350,7 +353,12 @@ export function useAuthMiddleware({
           }
 
           // Check if organization is required (for corporate users)
-          if (requireOrganization && userType === 'corporate' && onboardingComplete) {
+          // Skip organization check for the first 5 minutes after onboarding completion
+          const onboardingCompletionTime = user.unsafeMetadata?.onboardingCompletedAt as number;
+          const isInGracePeriod = onboardingCompletionTime && Date.now() - onboardingCompletionTime < 5 * 60 * 1000;
+
+          // Only check organization requirement if explicitly required and user is corporate
+          if (requireOrganization && userType === 'corporate' && onboardingComplete && !isInGracePeriod && !location.pathname.includes('/onboarding')) {
             try {
               const orgData = user?.unsafeMetadata?.currentOrganization;
               if (!validateOrganization(orgData)) {
@@ -362,7 +370,6 @@ export function useAuthMiddleware({
               const refreshInterval = 12 * 60 * 60 * 1000;
 
               if (Date.now() - lastUpdated > refreshInterval) {
-                const sessionToken = await validateSessionToken(session);
                 const cachedOrg = parseOrganizationCache(
                   sessionStorage.getItem(`org_${organization.id}`),
                   organization.id
@@ -372,7 +379,7 @@ export function useAuthMiddleware({
                 if (cachedOrg) {
                   updatedOrg = cachedOrg;
                 } else {
-                  const fetchedOrg = await fetchOrganizationDetails(organization.id, sessionToken);
+                  const fetchedOrg = await fetchOrganizationDetails(organization.id);
                   if (!fetchedOrg?.id || !fetchedOrg?.name) {
                     throw new Error('Invalid organization data received');
                   }

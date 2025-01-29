@@ -100,22 +100,41 @@ export default function RetailOnboarding() {
         lastName: formData.lastName,
       });
 
-      // Then update metadata
-      await user.update({
+      // Preserve existing metadata while updating
+      const currentMetadata = user.unsafeMetadata || {};
+      console.log('Current metadata before update:', currentMetadata);
+
+      const updateResult = await user.update({
         unsafeMetadata: {
+          ...currentMetadata,
           userType: 'retail',
           onboardingComplete: true,
+          onboardingCompletedAt: Date.now(),
           preferredContact: formData.preferredContact,
           updatedAt: new Date().toISOString(),
         },
       });
 
+      console.log('Update result:', {
+        success: !!updateResult,
+        newMetadata: updateResult?.unsafeMetadata,
+        userId: updateResult?.id
+      });
+
       // Force session token refresh to include new metadata
       await session.reload();
+
+      // Verify the update was successful
+      const updatedUser = await user.reload();
+      console.log('Verification:', {
+        onboardingComplete: updatedUser.unsafeMetadata?.onboardingComplete,
+        userType: updatedUser.unsafeMetadata?.userType
+      });
 
       // Add a small delay to ensure all updates are processed
       await new Promise(resolve => setTimeout(resolve, 1000));
 
+      // Navigate to retail home
       navigate('/retail');
     } catch (err) {
       console.error('Onboarding error:', err);

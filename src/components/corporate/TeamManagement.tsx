@@ -1,36 +1,79 @@
-import { useState } from 'react';
-import { Box, Button, Card, Grid, Typography } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { 
+  Box, 
+  Button, 
+  Card, 
+  Grid, 
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Alert
+} from '@mui/material';
 import { TeamMemberTable } from './';
-import { addTeamMember } from '../../services/organization';
+import { organizationService, Role, TeamMember } from '../../services/organization';
 import useNotification from '../common/NotificationService';
+import { useOrganization } from '@clerk/clerk-react';
 
-export interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: 'active' | 'pending';
-}
+const ROLES: { label: string; value: Role }[] = [
+  { label: 'Admin', value: 'ADMIN' },
+  { label: 'Manager', value: 'MANAGER' },
+  { label: 'Viewer', value: 'VIEWER' }
+];
 
 export default function TeamManagement() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(false);
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState<Role>('VIEWER');
+  const [error, setError] = useState<string | null>(null);
+  
   const { notifySuccess, notifyError } = useNotification();
+  const { organization } = useOrganization();
 
-  const handleAddMember = async () => {
+  useEffect(() => {
+    if (organization?.id) {
+      loadTeamMembers();
+    }
+  }, [organization?.id]);
+
+  const loadTeamMembers = async () => {
+    if (!organization?.id) return;
+    
     try {
       setLoading(true);
-      const newMember: TeamMember = {
-        id: crypto.randomUUID(),
-        name: 'New Member',
-        email: 'new.member@example.com',
-        role: 'Member',
-        status: 'pending'
-      };
+      const members = await organizationService.fetchTeamMembers(organization.id);
+      setTeamMembers(members);
+    } catch (error) {
+      console.error('Error loading team members:', error);
+      notifyError('Failed to load team members');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInviteMember = async () => {
+    if (!organization?.id) return;
+    try {
+      setLoading(true);
+      await organizationService.inviteTeamMember({
+        email: inviteEmail,
+        role: inviteRole,
+        organizationId: organization.id
+      });
       
-      setTeamMembers(prev => [...prev, newMember]);
-      await addTeamMember(newMember);
-      notifySuccess('Team member added successfully');
+      await loadTeamMembers();
+      setInviteDialogOpen(false);
+      setInviteEmail('');
+      setInviteRole('VIEWER');
+      notifySuccess('Team member invited successfully');
     } catch (error) {
       notifyError('Failed to add team member');
       console.error('Add member error:', error);
@@ -39,11 +82,17 @@ export default function TeamManagement() {
     }
   };
 
-  const handleEditMember = async (member: TeamMember) => {
+  const handleEditMember = async (member: TeamMember, newRole: Role) => {
+    if (!organization?.id) return;
     try {
       setLoading(true);
-      // TODO: Implement actual edit functionality
-      notifySuccess('Team member updated successfully');
+      await organizationService.updateTeamMemberRole(
+        organization.id,
+        member.id,
+        newRole
+      );
+      await loadTeamMembers();
+      notifySuccess('Team member role updated successfully');
     } catch (error) {
       notifyError('Failed to update team member');
       console.error('Edit member error:', error);
@@ -53,9 +102,11 @@ export default function TeamManagement() {
   };
 
   const handleRemoveMember = async (member: TeamMember) => {
+    if (!organization?.id) return;
     try {
       setLoading(true);
-      setTeamMembers(prev => prev.filter(m => m.id !== member.id));
+      await organizationService.removeTeamMember(organization.id, member.id);
+      await loadTeamMembers();
       notifySuccess('Team member removed successfully');
     } catch (error) {
       notifyError('Failed to remove team member');
@@ -68,29 +119,92 @@ export default function TeamManagement() {
   return (
     <Card>
       <Box p={3}>
-        <Grid container justifyContent="space-between" alignItems="center">
-          <Grid item>
-            <Typography variant="h5">Team Management</Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Grid container justifyContent="space-between" alignItems="center">
+              <Grid item>
+                <Typography variant="h5">Team Management</Typography>
+              </Grid>
+              <Grid item>
+                <Button 
+                  variant="contained" 
+                  color="primary"
+                  onClick={() => setInviteDialogOpen(true)}
+                  disabled={loading || !organization?.id}
+                >
+                  Invite Team Member
+                </Button>
+              </Grid>
+            </Grid>
           </Grid>
-          <Grid item>
-            <Button 
-              variant="contained" 
-              color="primary"
-              onClick={handleAddMember}
-              disabled={loading}
-            >
-              {loading ? 'Adding...' : 'Add Team Member'}
-            </Button>
+
+          <Grid item xs={12}>
+            {!organization?.id ? (
+              <Alert severity="info">
+                Please select an organization to manage team members.
+              </Alert>
+            ) : (
+              <TeamMemberTable 
+                members={teamMembers}
+                onEdit={handleEditMember}
+                onRemove={handleRemoveMember}
+                loading={loading}
+              />
+            )}
           </Grid>
         </Grid>
 
-        <Box mt={3}>
-          <TeamMemberTable 
-            members={teamMembers}
-            onEdit={handleEditMember}
-            onRemove={handleRemoveMember}
-          />
-        </Box>
+        <Dialog 
+          open={inviteDialogOpen} 
+          onClose={() => setInviteDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Invite Team Member</DialogTitle>
+          <DialogContent>
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
+            <Box sx={{ mt: 2 }}>
+              <TextField
+                label="Email Address"
+                type="email"
+                fullWidth
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                sx={{ mb: 2 }}
+              />
+              <FormControl fullWidth>
+                <InputLabel>Role</InputLabel>
+                <Select
+                  value={inviteRole}
+                  label="Role"
+                  onChange={(e) => setInviteRole(e.target.value as Role)}
+                >
+                  {ROLES.map((role) => (
+                    <MenuItem key={role.value} value={role.value}>
+                      {role.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setInviteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleInviteMember}
+              variant="contained"
+              disabled={!inviteEmail || loading}
+            >
+              {loading ? 'Inviting...' : 'Send Invite'}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </Card>
   );
