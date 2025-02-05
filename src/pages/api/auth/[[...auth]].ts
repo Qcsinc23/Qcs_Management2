@@ -1,9 +1,9 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { clerkClient } from '../../../services/auth'
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   const { method, query } = req
   const [action] = query.auth || []
@@ -13,7 +13,7 @@ export default async function handler(
       case 'session':
         if (method === 'GET') {
           const session = await clerkClient.verifySession(
-            req.headers['session-id'] as string
+            req.headers['session-id'] as string,
           )
           return res.status(200).json(session)
         }
@@ -24,7 +24,7 @@ export default async function handler(
           const { identifier, password } = req.body
           const session = await clerkClient.signIn.create({
             identifier,
-            password
+            password,
           })
           return res.status(200).json(session)
         }
@@ -33,7 +33,7 @@ export default async function handler(
       case 'sign-out':
         if (method === 'POST') {
           await clerkClient.signIn.revoke(
-            req.headers['session-id'] as string
+            req.headers['session-id'] as string,
           )
           return res.status(204).end()
         }
@@ -46,7 +46,7 @@ export default async function handler(
             emailAddress: email,
             password,
             firstName,
-            lastName
+            lastName,
           })
           return res.status(201).json(user)
         }
@@ -57,7 +57,8 @@ export default async function handler(
     }
 
     return res.status(405).json({ message: 'Method not allowed' })
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Auth API error:', error)
     return res.status(500).json({ message: 'Internal server error' })
   }

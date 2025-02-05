@@ -1,25 +1,24 @@
 import {
-  Box,
-  Container,
-  Typography,
+  Email as EmailIcon,
+  ExpandMore as ExpandMoreIcon,
+  QuestionAnswer as FAQIcon,
+  Phone as PhoneIcon,
+  Support as SupportIcon,
+  WhatsApp as WhatsAppIcon,
+} from '@mui/icons-material'
+import {
   Accordion,
-  AccordionSummary,
   AccordionDetails,
-  Grid,
+  AccordionSummary,
+  Box,
   Card,
   CardContent,
-  IconButton,
+  Container,
+  Grid,
+  Typography,
   useTheme,
-} from '@mui/material';
-import {
-  ExpandMore as ExpandMoreIcon,
-  Email as EmailIcon,
-  Phone as PhoneIcon,
-  WhatsApp as WhatsAppIcon,
-  QuestionAnswer as FAQIcon,
-  Support as SupportIcon,
-} from '@mui/icons-material';
-import ChatWidget from '../../components/common/ChatWidget';
+} from '@mui/material'
+import ChatWidget from '../../components/common/ChatWidget'
 
 const faqs = [
   {
@@ -46,7 +45,7 @@ const faqs = [
     question: 'What if my package is damaged or lost?',
     answer: 'All shipments include basic insurance coverage. For additional protection, you can opt for extended insurance during booking. Contact our support team immediately if you notice any issues with your delivery.',
   },
-];
+]
 
 const contactMethods = [
   {
@@ -64,10 +63,10 @@ const contactMethods = [
     title: 'WhatsApp',
     description: '+1 (555) XXX-XXXX\nInstant messaging support',
   },
-];
+]
 
 export default function Help() {
-  const theme = useTheme();
+  const theme = useTheme()
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -150,5 +149,5 @@ export default function Help() {
 
       <ChatWidget />
     </Container>
-  );
+  )
 }

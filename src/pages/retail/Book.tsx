@@ -1,5 +1,5 @@
-import { Box, Typography, Container } from '@mui/material';
-import QuickBooking from '../../components/retail/QuickBooking';
+import { Box, Container, Typography } from '@mui/material'
+import QuickBooking from '../../components/retail/QuickBooking'
 
 export default function Book() {
   return (
@@ -20,5 +20,5 @@ export default function Book() {
         <QuickBooking />
       </Container>
     </Box>
-  );
+  )
 }

@@ -1,108 +1,109 @@
+import { useClerk, useUser } from '@clerk/clerk-react'
 import {
+  Alert,
   Box,
-  Container,
-  Typography,
-  TextField,
   Button,
-  Paper,
+  CircularProgress,
+  Container,
   FormControl,
-  FormLabel,
-  RadioGroup,
   FormControlLabel,
+  FormLabel,
+  Paper,
   Radio,
-  Stepper,
+  RadioGroup,
   Step,
   StepLabel,
-  Alert,
-  CircularProgress,
-} from '@mui/material';
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useUser, useClerk } from '@clerk/clerk-react';
+  Stepper,
+  TextField,
+  Typography,
+} from '@mui/material'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
-type OnboardingStep = 'personal' | 'preferences' | 'review';
+type OnboardingStep = 'personal' | 'preferences' | 'review'
 
 export default function RetailOnboarding() {
-  const navigate = useNavigate();
-  const { user, isLoaded: userLoaded } = useUser();
-  const { session } = useClerk();
-  const [currentStep, setCurrentStep] = useState<OnboardingStep>('personal');
-  const [isInitializing, setIsInitializing] = useState(true);
-  const [error, setError] = useState<string>('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate()
+  const { user, isLoaded: userLoaded } = useUser()
+  const { session } = useClerk()
+  const [currentStep, setCurrentStep] = useState<OnboardingStep>('personal')
+  const [isInitializing, setIsInitializing] = useState(true)
+  const [error, setError] = useState<string>('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     preferredContact: 'email' as 'email' | 'phone' | 'sms',
-  });
+  })
 
   const steps = [
     { key: 'personal', label: 'Personal Information' },
     { key: 'preferences', label: 'Preferences' },
     { key: 'review', label: 'Review' },
-  ];
+  ]
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [field]: value,
-    }));
-  };
+    }))
+  }
 
   const handleNext = () => {
-    const stepIndex = steps.findIndex((step) => step.key === currentStep);
+    const stepIndex = steps.findIndex(step => step.key === currentStep)
     if (stepIndex < steps.length - 1) {
-      setCurrentStep(steps[stepIndex + 1].key as OnboardingStep);
+      setCurrentStep(steps[stepIndex + 1].key as OnboardingStep)
     }
-  };
+  }
 
   const handleBack = () => {
-    const stepIndex = steps.findIndex((step) => step.key === currentStep);
+    const stepIndex = steps.findIndex(step => step.key === currentStep)
     if (stepIndex > 0) {
-      setCurrentStep(steps[stepIndex - 1].key as OnboardingStep);
+      setCurrentStep(steps[stepIndex - 1].key as OnboardingStep)
     }
-  };
+  }
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
-      if (!userLoaded) return;
-      
+      if (!userLoaded)
+        return
+
       if (!user) {
-        navigate('/sign-in?userType=retail');
-        return;
+        navigate('/sign-in?userType=retail')
+        return
       }
 
       // Check if user is already onboarded
       if (user.unsafeMetadata?.onboardingComplete === true) {
-        navigate('/retail');
-        return;
+        navigate('/retail')
+        return
       }
 
-      setIsInitializing(false);
-    };
+      setIsInitializing(false)
+    }
 
-    checkOnboardingStatus();
-  }, [user, userLoaded, navigate]);
+    checkOnboardingStatus()
+  }, [user, userLoaded, navigate])
 
   const handleSubmit = async () => {
     if (!user || !session) {
-      setError('Authentication required. Please sign in.');
-      return;
+      setError('Authentication required. Please sign in.')
+      return
     }
 
-    setIsSubmitting(true);
-    setError('');
+    setIsSubmitting(true)
+    setError('')
 
     try {
       // First update basic information
       await user.update({
         firstName: formData.firstName,
         lastName: formData.lastName,
-      });
+      })
 
       // Preserve existing metadata while updating
-      const currentMetadata = user.unsafeMetadata || {};
-      console.log('Current metadata before update:', currentMetadata);
+      const currentMetadata = user.unsafeMetadata || {}
+      console.log('Current metadata before update:', currentMetadata)
 
       const updateResult = await user.update({
         unsafeMetadata: {
@@ -113,36 +114,38 @@ export default function RetailOnboarding() {
           preferredContact: formData.preferredContact,
           updatedAt: new Date().toISOString(),
         },
-      });
+      })
 
       console.log('Update result:', {
         success: !!updateResult,
         newMetadata: updateResult?.unsafeMetadata,
-        userId: updateResult?.id
-      });
+        userId: updateResult?.id,
+      })
 
       // Force session token refresh to include new metadata
-      await session.reload();
+      await session.reload()
 
       // Verify the update was successful
-      const updatedUser = await user.reload();
+      const updatedUser = await user.reload()
       console.log('Verification:', {
         onboardingComplete: updatedUser.unsafeMetadata?.onboardingComplete,
-        userType: updatedUser.unsafeMetadata?.userType
-      });
+        userType: updatedUser.unsafeMetadata?.userType,
+      })
 
       // Add a small delay to ensure all updates are processed
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
       // Navigate to retail home
-      navigate('/retail');
-    } catch (err) {
-      console.error('Onboarding error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to complete onboarding. Please try again.');
-    } finally {
-      setIsSubmitting(false);
+      navigate('/retail')
     }
-  };
+    catch (err) {
+      console.error('Onboarding error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to complete onboarding. Please try again.')
+    }
+    finally {
+      setIsSubmitting(false)
+    }
+  }
 
   const renderStep = () => {
     switch (currentStep) {
@@ -153,7 +156,7 @@ export default function RetailOnboarding() {
               fullWidth
               label="First Name"
               value={formData.firstName}
-              onChange={(e) => handleInputChange('firstName', e.target.value)}
+              onChange={e => handleInputChange('firstName', e.target.value)}
               margin="normal"
               required
             />
@@ -161,12 +164,12 @@ export default function RetailOnboarding() {
               fullWidth
               label="Last Name"
               value={formData.lastName}
-              onChange={(e) => handleInputChange('lastName', e.target.value)}
+              onChange={e => handleInputChange('lastName', e.target.value)}
               margin="normal"
               required
             />
           </Box>
-        );
+        )
 
       case 'preferences':
         return (
@@ -175,7 +178,7 @@ export default function RetailOnboarding() {
               <FormLabel>Preferred Contact Method</FormLabel>
               <RadioGroup
                 value={formData.preferredContact}
-                onChange={(e) => handleInputChange('preferredContact', e.target.value as 'email' | 'phone' | 'sms')}
+                onChange={e => handleInputChange('preferredContact', e.target.value as 'email' | 'phone' | 'sms')}
               >
                 <FormControlLabel value="email" control={<Radio />} label="Email" />
                 <FormControlLabel value="phone" control={<Radio />} label="Phone" />
@@ -183,7 +186,7 @@ export default function RetailOnboarding() {
               </RadioGroup>
             </FormControl>
           </Box>
-        );
+        )
 
       case 'review':
         return (
@@ -195,21 +198,30 @@ export default function RetailOnboarding() {
               <Typography variant="subtitle1" gutterBottom>
                 Personal Information
               </Typography>
-              <Typography>First Name: {formData.firstName}</Typography>
-              <Typography>Last Name: {formData.lastName}</Typography>
-              <Typography>Preferred Contact: {formData.preferredContact}</Typography>
+              <Typography>
+                First Name:
+                {formData.firstName}
+              </Typography>
+              <Typography>
+                Last Name:
+                {formData.lastName}
+              </Typography>
+              <Typography>
+                Preferred Contact:
+                {formData.preferredContact}
+              </Typography>
             </Paper>
           </Box>
-        );
+        )
     }
-  };
+  }
 
   if (isInitializing) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <CircularProgress />
       </Box>
-    );
+    )
   }
 
   return (
@@ -222,8 +234,8 @@ export default function RetailOnboarding() {
           Help us personalize your experience with QCS Express
         </Typography>
 
-        <Stepper activeStep={steps.findIndex((step) => step.key === currentStep)} sx={{ mb: 4 }}>
-          {steps.map((step) => (
+        <Stepper activeStep={steps.findIndex(step => step.key === currentStep)} sx={{ mb: 4 }}>
+          {steps.map(step => (
             <Step key={step.key}>
               <StepLabel>{step.label}</StepLabel>
             </Step>
@@ -246,27 +258,29 @@ export default function RetailOnboarding() {
           >
             Back
           </Button>
-          {currentStep === 'review' ? (
-            <Button
-              variant="contained"
-              onClick={handleSubmit}
-              disabled={!formData.firstName || !formData.lastName || isSubmitting}
-            >
-              {isSubmitting ? 'Submitting...' : 'Complete Onboarding'}
-            </Button>
-          ) : (
-            <Button
-              variant="contained"
-              onClick={handleNext}
-              disabled={
-                currentStep === 'personal' && (!formData.firstName || !formData.lastName)
-              }
-            >
-              Next
-            </Button>
-          )}
+          {currentStep === 'review'
+            ? (
+                <Button
+                  variant="contained"
+                  onClick={handleSubmit}
+                  disabled={!formData.firstName || !formData.lastName || isSubmitting}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Complete Onboarding'}
+                </Button>
+              )
+            : (
+                <Button
+                  variant="contained"
+                  onClick={handleNext}
+                  disabled={
+                    currentStep === 'personal' && (!formData.firstName || !formData.lastName)
+                  }
+                >
+                  Next
+                </Button>
+              )}
         </Box>
       </Box>
     </Container>
-  );
+  )
 }

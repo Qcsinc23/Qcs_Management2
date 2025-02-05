@@ -1,78 +1,83 @@
-import { useState, useEffect } from 'react';
+import { SignInButton } from '@clerk/clerk-react'
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Typography,
-  Box,
   Alert,
+  Box,
+  Button,
   CircularProgress,
-} from '@mui/material';
-import { SignInButton } from '@clerk/clerk-react';
-import { useNavigate } from 'react-router-dom';
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Typography,
+} from '@mui/material'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
-  hasGuestData,
-  getGuestBooking,
   clearAllGuestData,
-} from '../../services/localStorage';
+  getGuestBooking,
+  hasGuestData,
+} from '../../services/localStorage'
 
 interface GuestSessionProps {
-  onContinueAsGuest?: () => void;
+  onContinueAsGuest?: () => void
 }
 
 export default function GuestSession({ onContinueAsGuest }: GuestSessionProps) {
-  const [showDialog, setShowDialog] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  const [showDialog, setShowDialog] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     // Check for existing guest data when component mounts
     if (hasGuestData()) {
-      setShowDialog(true);
+      setShowDialog(true)
     }
-  }, []);
+  }, [])
 
   const handleContinueBooking = () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const savedBooking = getGuestBooking();
+      const savedBooking = getGuestBooking()
       if (savedBooking) {
         // If there's a saved booking, navigate to the appropriate step
         if (savedBooking.trackingNumber) {
-          navigate('/retail/payment', {
+          void navigate('/retail/payment', {
             state: {
               orderDetails: savedBooking.orderDetails,
               pricing: savedBooking.pricing,
             },
-          });
-        } else {
-          navigate('/retail/book');
+          })
+        }
+        else {
+          void navigate('/retail/book')
         }
       }
-    } catch (error) {
-      console.error('Error restoring guest session:', error);
-    } finally {
-      setIsLoading(false);
-      setShowDialog(false);
     }
-  };
+    catch (error) {
+      console.error('Error restoring guest session:', error)
+    }
+    finally {
+      setIsLoading(false)
+      setShowDialog(false)
+    }
+  }
 
   const handleStartNew = () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      clearAllGuestData();
+      clearAllGuestData()
       if (onContinueAsGuest) {
-        onContinueAsGuest();
+        onContinueAsGuest()
       }
-    } catch (error) {
-      console.error('Error clearing guest data:', error);
-    } finally {
-      setIsLoading(false);
-      setShowDialog(false);
     }
-  };
+    catch (error) {
+      console.error('Error clearing guest data:', error)
+    }
+    finally {
+      setIsLoading(false)
+      setShowDialog(false)
+    }
+  }
 
   return (
     <Dialog
@@ -127,5 +132,5 @@ export default function GuestSession({ onContinueAsGuest }: GuestSessionProps) {
         </SignInButton>
       </DialogActions>
     </Dialog>
-  );
+  )
 }

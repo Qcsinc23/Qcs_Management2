@@ -1,72 +1,72 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 
 interface FAQItem {
-  question: string;
-  answer: string;
-  category: string;
+  question: string
+  answer: string
+  category: string
 }
 
 const FAQ: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('general');
+  const [selectedCategory, setSelectedCategory] = useState<string>('general')
 
   const faqItems: FAQItem[] = [
     // General Questions
     {
       category: 'general',
       question: 'What is QCS Management?',
-      answer: 'QCS Management is a comprehensive logistics and delivery management platform that helps businesses streamline their shipping operations and manage deliveries efficiently.'
+      answer: 'QCS Management is a comprehensive logistics and delivery management platform that helps businesses streamline their shipping operations and manage deliveries efficiently.',
     },
     {
       category: 'general',
       question: 'How do I get started?',
-      answer: 'You can get started by signing up for an account, completing the onboarding process, and setting up your delivery preferences. Our system will guide you through each step.'
+      answer: 'You can get started by signing up for an account, completing the onboarding process, and setting up your delivery preferences. Our system will guide you through each step.',
     },
-    
+
     // Shipping & Delivery
     {
       category: 'shipping',
       question: 'What shipping options are available?',
-      answer: 'We offer various shipping options including same-day delivery, next-day delivery, and standard shipping. Options may vary based on your location and package specifications.'
+      answer: 'We offer various shipping options including same-day delivery, next-day delivery, and standard shipping. Options may vary based on your location and package specifications.',
     },
     {
       category: 'shipping',
       question: 'How do I track my shipment?',
-      answer: 'You can track your shipment using the tracking number provided in your confirmation email. Simply enter it in the tracking section of our website or app.'
+      answer: 'You can track your shipment using the tracking number provided in your confirmation email. Simply enter it in the tracking section of our website or app.',
     },
-    
+
     // Billing & Payments
     {
       category: 'billing',
       question: 'What payment methods do you accept?',
-      answer: 'We accept all major credit cards, bank transfers, and digital payment methods. Corporate accounts may also qualify for invoice-based billing.'
+      answer: 'We accept all major credit cards, bank transfers, and digital payment methods. Corporate accounts may also qualify for invoice-based billing.',
     },
     {
       category: 'billing',
       question: 'How does pricing work?',
-      answer: 'Our pricing is based on factors including distance, package size, delivery speed, and any additional services required. You can get an instant quote using our booking system.'
+      answer: 'Our pricing is based on factors including distance, package size, delivery speed, and any additional services required. You can get an instant quote using our booking system.',
     },
-    
+
     // Account Management
     {
       category: 'account',
       question: 'How do I update my account information?',
-      answer: 'You can update your account information through the Profile section. This includes contact details, delivery preferences, and notification settings.'
+      answer: 'You can update your account information through the Profile section. This includes contact details, delivery preferences, and notification settings.',
     },
     {
       category: 'account',
       question: 'Can I have multiple users on one account?',
-      answer: 'Yes, corporate accounts can have multiple users with different permission levels. Contact our support team to set up additional users.'
-    }
-  ];
+      answer: 'Yes, corporate accounts can have multiple users with different permission levels. Contact our support team to set up additional users.',
+    },
+  ]
 
-  const categories = Array.from(new Set(faqItems.map(item => item.category)));
+  const categories = Array.from(new Set(faqItems.map(item => item.category)))
 
   const categoryLabels: { [key: string]: string } = {
     general: 'General Questions',
     shipping: 'Shipping & Delivery',
     billing: 'Billing & Payments',
-    account: 'Account Management'
-  };
+    account: 'Account Management',
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -76,15 +76,16 @@ const FAQ: React.FC = () => {
       <div className="mb-8">
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
-            {categories.map((category) => (
+            {categories.map(category => (
               <button
+                type="button"
                 key={category}
                 onClick={() => setSelectedCategory(category)}
                 className={`
                   whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm
                   ${selectedCategory === category
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
                 `}
               >
                 {categoryLabels[category]}
@@ -129,7 +130,7 @@ const FAQ: React.FC = () => {
         </a>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default FAQ;
+export default FAQ

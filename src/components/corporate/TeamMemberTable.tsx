@@ -1,92 +1,102 @@
-import { useState } from 'react';
-import { 
-  DataGrid, 
-  GridColDef, 
-  GridToolbar,
+import type {
+  SelectChangeEvent,
+} from '@mui/material'
+import type {
+  GridColDef,
+  GridFilterModel,
   GridSortModel,
-  GridFilterModel
-} from '@mui/x-data-grid';
-import { 
-  Button, 
-  IconButton, 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
+} from '@mui/x-data-grid'
+import type { Role, TeamMember } from '../../services/organization'
+import { Delete, Edit } from '@mui/icons-material'
+import {
+  Button,
+  Dialog,
   DialogActions,
-  Tooltip,
-  Select,
-  MenuItem,
+  DialogContent,
+  DialogTitle,
   FormControl,
+  IconButton,
   InputLabel,
-  SelectChangeEvent
-} from '@mui/material';
-import { Edit, Delete } from '@mui/icons-material';
-import { TeamMember, Role } from '../../services/organization';
-import useNotification from '../common/NotificationService';
+  MenuItem,
+  Select,
+  Tooltip,
+} from '@mui/material'
+import {
+  DataGrid,
+  GridToolbar,
+} from '@mui/x-data-grid'
+import { useState } from 'react'
+import useNotification from '../common/NotificationService'
 
 interface TeamMemberTableProps {
-  members: TeamMember[];
-  onEdit: (member: TeamMember, newRole: Role) => Promise<void>;
-  onRemove: (member: TeamMember) => Promise<void>;
-  loading?: boolean;
+  members: TeamMember[]
+  onEdit: (member: TeamMember, newRole: Role) => Promise<void>
+  onRemove: (member: TeamMember) => Promise<void>
+  loading?: boolean
 }
 
-const ROLES: { label: string; value: Role }[] = [
+const ROLES: { label: string, value: Role }[] = [
   { label: 'Admin', value: 'ADMIN' },
   { label: 'Manager', value: 'MANAGER' },
-  { label: 'Viewer', value: 'VIEWER' }
-];
+  { label: 'Viewer', value: 'VIEWER' },
+]
 
 export default function TeamMemberTable({ members, onEdit, onRemove, loading = false }: TeamMemberTableProps) {
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
-  const [selectedRole, setSelectedRole] = useState<Role>('VIEWER');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [sortModel, setSortModel] = useState<GridSortModel>([{ field: 'name', sort: 'asc' }]);
-  const [filterModel, setFilterModel] = useState<GridFilterModel>({ items: [] });
-  const { notifyError } = useNotification();
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null)
+  const [selectedRole, setSelectedRole] = useState<Role>('VIEWER')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [sortModel, setSortModel] = useState<GridSortModel>([{ field: 'name', sort: 'asc' }])
+  const [filterModel, setFilterModel] = useState<GridFilterModel>({ items: [] })
+  const { notifyError } = useNotification()
 
   const handleEditClick = (member: TeamMember) => {
-    setSelectedMember(member);
-    setSelectedRole(member.role);
-    setEditDialogOpen(true);
-  };
+    setSelectedMember(member)
+    setSelectedRole(member.role)
+    setEditDialogOpen(true)
+  }
 
   const handleEditSubmit = async () => {
-    if (!selectedMember) return;
-    
-    setIsSubmitting(true);
+    if (!selectedMember)
+      return
+
+    setIsSubmitting(true)
     try {
-      await onEdit(selectedMember, selectedRole);
-      setEditDialogOpen(false);
-    } catch (error) {
-      notifyError('Failed to update team member');
-      console.error('Edit error:', error);
-    } finally {
-      setIsSubmitting(false);
+      await onEdit(selectedMember, selectedRole)
+      setEditDialogOpen(false)
     }
-  };
+    catch (error) {
+      notifyError('Failed to update team member')
+      console.error('Edit error:', error)
+    }
+    finally {
+      setIsSubmitting(false)
+    }
+  }
 
   const handleRemoveClick = (member: TeamMember) => {
-    setSelectedMember(member);
-    setConfirmOpen(true);
-  };
+    setSelectedMember(member)
+    setConfirmOpen(true)
+  }
 
   const handleConfirmRemove = async () => {
-    if (!selectedMember) return;
-    
-    setIsSubmitting(true);
+    if (!selectedMember)
+      return
+
+    setIsSubmitting(true)
     try {
-      await onRemove(selectedMember);
-    } catch (error) {
-      notifyError('Failed to remove team member');
-      console.error('Remove error:', error);
-    } finally {
-      setIsSubmitting(false);
-      setConfirmOpen(false);
+      await onRemove(selectedMember)
     }
-  };
+    catch (error) {
+      notifyError('Failed to remove team member')
+      console.error('Remove error:', error)
+    }
+    finally {
+      setIsSubmitting(false)
+      setConfirmOpen(false)
+    }
+  }
 
   const columns: GridColDef[] = [
     { field: 'name', headerName: 'Name', width: 200, sortable: true, filterable: true },
@@ -99,10 +109,10 @@ export default function TeamMemberTable({ members, onEdit, onRemove, loading = f
       width: 150,
       sortable: false,
       filterable: false,
-      renderCell: (params) => (
+      renderCell: params => (
         <>
           <Tooltip title="Edit member">
-            <IconButton 
+            <IconButton
               aria-label="edit"
               onClick={() => handleEditClick(params.row)}
               size="small"
@@ -111,7 +121,7 @@ export default function TeamMemberTable({ members, onEdit, onRemove, loading = f
             </IconButton>
           </Tooltip>
           <Tooltip title="Remove member">
-            <IconButton 
+            <IconButton
               aria-label="remove"
               onClick={() => handleRemoveClick(params.row)}
               size="small"
@@ -121,9 +131,9 @@ export default function TeamMemberTable({ members, onEdit, onRemove, loading = f
             </IconButton>
           </Tooltip>
         </>
-      )
-    }
-  ];
+      ),
+    },
+  ]
 
   return (
     <>
@@ -133,9 +143,9 @@ export default function TeamMemberTable({ members, onEdit, onRemove, loading = f
           columns={columns}
           loading={loading}
           sortModel={sortModel}
-          onSortModelChange={(model) => setSortModel(model)}
+          onSortModelChange={model => setSortModel(model)}
           filterModel={filterModel}
-          onFilterModelChange={(model) => setFilterModel(model)}
+          onFilterModelChange={model => setFilterModel(model)}
           slots={{ toolbar: GridToolbar }}
           slotProps={{
             toolbar: {
@@ -164,14 +174,17 @@ export default function TeamMemberTable({ members, onEdit, onRemove, loading = f
           Confirm Removal
         </DialogTitle>
         <DialogContent>
-          Are you sure you want to remove {selectedMember?.name}?
+          Are you sure you want to remove
+          {' '}
+          {selectedMember?.name}
+          ?
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirmOpen(false)} color="primary">
             Cancel
           </Button>
-          <Button 
-            onClick={handleConfirmRemove} 
+          <Button
+            onClick={handleConfirmRemove}
             color="error"
             disabled={isSubmitting}
           >
@@ -194,8 +207,13 @@ export default function TeamMemberTable({ members, onEdit, onRemove, loading = f
             {selectedMember && (
               <>
                 <div style={{ marginBottom: '16px' }}>
-                  <strong>Name:</strong> {selectedMember.name}<br />
-                  <strong>Email:</strong> {selectedMember.email}
+                  <strong>Name:</strong>
+                  {' '}
+                  {selectedMember.name}
+                  <br />
+                  <strong>Email:</strong>
+                  {' '}
+                  {selectedMember.email}
                 </div>
                 <FormControl fullWidth>
                   <InputLabel id="role-select-label">Role</InputLabel>
@@ -206,7 +224,7 @@ export default function TeamMemberTable({ members, onEdit, onRemove, loading = f
                     label="Role"
                     onChange={(e: SelectChangeEvent) => setSelectedRole(e.target.value as Role)}
                   >
-                    {ROLES.map((role) => (
+                    {ROLES.map(role => (
                       <MenuItem key={role.value} value={role.value}>
                         {role.label}
                       </MenuItem>
@@ -221,7 +239,7 @@ export default function TeamMemberTable({ members, onEdit, onRemove, loading = f
           <Button onClick={() => setEditDialogOpen(false)}>
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={handleEditSubmit}
             variant="contained"
             disabled={isSubmitting || !selectedMember || selectedRole === selectedMember.role}
@@ -231,5 +249,5 @@ export default function TeamMemberTable({ members, onEdit, onRemove, loading = f
         </DialogActions>
       </Dialog>
     </>
-  );
+  )
 }

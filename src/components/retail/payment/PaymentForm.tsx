@@ -1,59 +1,60 @@
-import { useState } from 'react';
 import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  TextField,
-  Grid,
-  Divider,
-  CircularProgress,
   Alert,
-  FormControlLabel,
+  Box,
+  Button,
   Checkbox,
-} from '@mui/material';
+  CircularProgress,
+  Divider,
+  FormControlLabel,
+  Grid,
+  Paper,
+  TextField,
+  Typography,
+} from '@mui/material'
 import {
   CardElement,
   Elements,
-  useStripe,
   useElements,
-} from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
+  useStripe,
+} from '@stripe/react-stripe-js'
+import { loadStripe } from '@stripe/stripe-js'
+import { useState } from 'react'
 
 // Initialize Stripe (in production, move this to an environment variable)
-const stripePromise = loadStripe('your_publishable_key');
+const stripePromise = loadStripe('your_publishable_key')
 
 interface PaymentFormProps {
-  amount: number;
-  onSuccess: (paymentId: string) => void;
-  onError: (error: string) => void;
+  amount: number
+  onSuccess: (paymentId: string) => void
+  onError: (error: string) => void
 }
 
-const PaymentFormContent = ({ amount, onSuccess, onError }: PaymentFormProps) => {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [processing, setProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [email, setEmail] = useState('');
-  const [splitPayment, setSplitPayment] = useState(false);
+function PaymentFormContent({ amount, onSuccess, onError }: PaymentFormProps) {
+  const stripe = useStripe()
+  const elements = useElements()
+  const [processing, setProcessing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [email, setEmail] = useState('')
+  const [splitPayment, setSplitPayment] = useState(false)
   const [splitDetails, setSplitDetails] = useState({
     numberOfPayments: 2,
     firstPayment: amount / 2,
-  });
+  })
 
   const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+    event.preventDefault()
 
     if (!stripe || !elements) {
-      return;
+      return
     }
 
-    setProcessing(true);
-    setError(null);
+    setProcessing(true)
+    setError(null)
 
     try {
-      const cardElement = elements.getElement(CardElement);
-      if (!cardElement) throw new Error('Card element not found');
+      const cardElement = elements.getElement(CardElement)
+      if (!cardElement)
+        throw new Error('Card element not found')
 
       // Create payment method
       const { error: stripeError, paymentMethod } = await stripe.createPaymentMethod({
@@ -62,32 +63,34 @@ const PaymentFormContent = ({ amount, onSuccess, onError }: PaymentFormProps) =>
         billing_details: {
           email,
         },
-      });
+      })
 
       if (stripeError) {
-        throw new Error(stripeError.message);
+        throw new Error(stripeError.message)
       }
 
       if (!paymentMethod) {
-        throw new Error('Payment failed');
+        throw new Error('Payment failed')
       }
 
       // In a real application, you would send this to your server
       // to create a payment intent and confirm the payment
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
-      onSuccess(paymentMethod.id);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Payment failed';
-      setError(errorMessage);
-      onError(errorMessage);
-    } finally {
-      setProcessing(false);
+      onSuccess(paymentMethod.id)
     }
-  };
+    catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Payment failed'
+      setError(errorMessage)
+      onError(errorMessage)
+    }
+    finally {
+      setProcessing(false)
+    }
+  }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={e => void handleSubmit(e)}>
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <TextField
@@ -96,7 +99,7 @@ const PaymentFormContent = ({ amount, onSuccess, onError }: PaymentFormProps) =>
             required
             fullWidth
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={e => setEmail(e.target.value)}
           />
         </Grid>
 
@@ -106,8 +109,8 @@ const PaymentFormContent = ({ amount, onSuccess, onError }: PaymentFormProps) =>
               options={{
                 style: {
                   base: {
-                    fontSize: '16px',
-                    color: '#424770',
+                    'fontSize': '16px',
+                    'color': '#424770',
                     '::placeholder': {
                       color: '#aab7c4',
                     },
@@ -123,12 +126,12 @@ const PaymentFormContent = ({ amount, onSuccess, onError }: PaymentFormProps) =>
 
         <Grid item xs={12}>
           <FormControlLabel
-            control={
+            control={(
               <Checkbox
                 checked={splitPayment}
-                onChange={(e) => setSplitPayment(e.target.checked)}
+                onChange={e => setSplitPayment(e.target.checked)}
               />
-            }
+            )}
             label="Split payment into installments"
           />
         </Grid>
@@ -141,10 +144,10 @@ const PaymentFormContent = ({ amount, onSuccess, onError }: PaymentFormProps) =>
                 type="number"
                 fullWidth
                 value={splitDetails.numberOfPayments}
-                onChange={(e) => setSplitDetails(prev => ({
+                onChange={e => setSplitDetails(prev => ({
                   ...prev,
-                  numberOfPayments: parseInt(e.target.value),
-                  firstPayment: amount / parseInt(e.target.value),
+                  numberOfPayments: Number.parseInt(e.target.value),
+                  firstPayment: amount / Number.parseInt(e.target.value),
                 }))}
                 inputProps={{ min: 2, max: 4 }}
               />
@@ -155,9 +158,9 @@ const PaymentFormContent = ({ amount, onSuccess, onError }: PaymentFormProps) =>
                 type="number"
                 fullWidth
                 value={splitDetails.firstPayment}
-                onChange={(e) => setSplitDetails(prev => ({
+                onChange={e => setSplitDetails(prev => ({
                   ...prev,
-                  firstPayment: parseFloat(e.target.value),
+                  firstPayment: Number.parseFloat(e.target.value),
                 }))}
                 InputProps={{
                   startAdornment: '$',
@@ -181,17 +184,19 @@ const PaymentFormContent = ({ amount, onSuccess, onError }: PaymentFormProps) =>
             disabled={!stripe || processing}
             sx={{ py: 1.5 }}
           >
-            {processing ? (
-              <CircularProgress size={24} />
-            ) : (
-              `Pay ${splitPayment ? `$${splitDetails.firstPayment.toFixed(2)} now` : `$${amount.toFixed(2)}`}`
-            )}
+            {processing
+              ? (
+                  <CircularProgress size={24} />
+                )
+              : (
+                  `Pay ${splitPayment ? `$${splitDetails.firstPayment.toFixed(2)} now` : `$${amount.toFixed(2)}`}`
+                )}
           </Button>
         </Grid>
       </Grid>
     </form>
-  );
-};
+  )
+}
 
 export default function PaymentForm(props: PaymentFormProps) {
   return (
@@ -204,5 +209,5 @@ export default function PaymentForm(props: PaymentFormProps) {
         <PaymentFormContent {...props} />
       </Paper>
     </Elements>
-  );
+  )
 }

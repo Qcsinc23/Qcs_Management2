@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
-import { Box, Card, Typography, CircularProgress } from '@mui/material';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import useNotification from '../common/NotificationService';
-import { ReportItem } from '../../types/reports';
-import { getReports } from '../../services/reports';
+import type { GridColDef } from '@mui/x-data-grid'
+import type { ReportItem } from '../../types/reports'
+import { Box, Card, CircularProgress, Typography } from '@mui/material'
+import { DataGrid } from '@mui/x-data-grid'
+import { useEffect, useState } from 'react'
+import { getReports } from '../../services/reports'
+import useNotification from '../common/NotificationService'
 
 const columns: GridColDef[] = [
   { field: 'type', headerName: 'Type', width: 150 },
@@ -11,34 +12,36 @@ const columns: GridColDef[] = [
   { field: 'generatedAt', headerName: 'Generated At', width: 200 },
   { field: 'status', headerName: 'Status', width: 150 },
   { field: 'downloadUrl', headerName: 'Download', width: 150 },
-];
+]
 
 export default function ReportsOverview() {
-  const [reports, setReports] = useState<ReportItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { notifyError } = useNotification();
+  const [reports, setReports] = useState<ReportItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const { notifyError } = useNotification()
 
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const data = await getReports();
-        setReports(data);
-      } catch (error) {
-        notifyError('Failed to load reports');
-      } finally {
-        setLoading(false);
+        const data = await getReports()
+        setReports(data)
       }
-    };
-    
-    fetchReports();
-  }, [notifyError]);
+      catch (error) {
+        notifyError('Failed to load reports')
+      }
+      finally {
+        setLoading(false)
+      }
+    }
+
+    void fetchReports()
+  }, [notifyError])
 
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" mt={4}>
         <CircularProgress />
       </Box>
-    );
+    )
   }
 
   return (
@@ -65,5 +68,5 @@ export default function ReportsOverview() {
         </Box>
       </Box>
     </Card>
-  );
+  )
 }

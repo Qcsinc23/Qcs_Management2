@@ -1,21 +1,20 @@
 import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
-  useTheme,
-} from '@mui/material';
-import {
-  Speed as SpeedIcon,
   Security as SecurityIcon,
   LocalShipping as ShippingIcon,
+  Speed as SpeedIcon,
   Support as SupportIcon,
-} from '@mui/icons-material';
-import { Link } from 'react-router-dom';
+} from '@mui/icons-material'
+import {
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  Container,
+  Grid,
+  Typography,
+} from '@mui/material'
+import { Link } from 'react-router-dom'
 
 const features = [
   {
@@ -38,11 +37,9 @@ const features = [
     title: '24/7 Support',
     description: 'Round-the-clock customer service to assist you with any questions or concerns.',
   },
-];
+]
 
 export default function RetailHome() {
-  const theme = useTheme();
-
   return (
     <Box>
       {/* Hero Section */}
@@ -114,14 +111,14 @@ export default function RetailHome() {
       {/* Features Section */}
       <Container maxWidth="lg">
         <Grid container spacing={4}>
-          {features.map((feature) => (
+          {features.map(feature => (
             <Grid item xs={12} sm={6} md={3} key={feature.title}>
               <Card
                 sx={{
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  transition: 'transform 0.2s',
+                  'height': '100%',
+                  'display': 'flex',
+                  'flexDirection': 'column',
+                  'transition': 'transform 0.2s',
                   '&:hover': {
                     transform: 'translateY(-4px)',
                   },
@@ -165,5 +162,5 @@ export default function RetailHome() {
         </Grid>
       </Container>
     </Box>
-  );
+  )
 }

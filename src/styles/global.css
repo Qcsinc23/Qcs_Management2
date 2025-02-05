@@ -17,6 +17,6 @@ html, body, #root {
 #root:empty::after {
   content: "Loading...";
   color: #1976d2;
-  font-family: "Roboto", sans-serif;
+  font-family: Roboto, sans-serif;
   font-size: 1.2rem;
 }

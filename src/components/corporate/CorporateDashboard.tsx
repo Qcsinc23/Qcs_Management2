@@ -1,17 +1,19 @@
-import { Card, Grid } from '@mui/material';
-import OrganizationSwitcher from './OrganizationSwitcher';
+import { Card, Grid } from '@mui/material'
+import OrganizationSwitcher from './OrganizationSwitcher'
 
 interface CorporateDashboardProps {
-  organizationId: string;
+  organizationId: string
 }
 
 export default function CorporateDashboard({ organizationId }: CorporateDashboardProps) {
+  // TODO: organizationId will be used for fetching organization-specific data
+  // when implementing activity feed, quick actions, and usage charts
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
         <OrganizationSwitcher />
       </Grid>
-      
+
       <Grid item xs={12} md={6}>
         <Card>
           <h2>Recent Activity</h2>
@@ -33,5 +35,5 @@ export default function CorporateDashboard({ organizationId }: CorporateDashboar
         </Card>
       </Grid>
     </Grid>
-  );
+  )
 }

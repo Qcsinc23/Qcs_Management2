@@ -1,38 +1,38 @@
 import {
+  Download as DownloadIcon,
+  Receipt as ReceiptIcon,
+} from '@mui/icons-material'
+import {
   Box,
-  Paper,
-  Typography,
+  Button,
+  CircularProgress,
   Divider,
   List,
   ListItem,
   ListItemText,
-  Button,
-  CircularProgress,
-} from '@mui/material';
-import {
-  Receipt as ReceiptIcon,
-  Download as DownloadIcon,
-} from '@mui/icons-material';
-import { useState } from 'react';
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+  Paper,
+  Typography,
+} from '@mui/material'
+import { PDFDocument, StandardFonts } from 'pdf-lib'
+import { useState } from 'react'
 
 interface PaymentSummaryProps {
   orderDetails: {
-    trackingNumber: string;
-    service: string;
-    origin: string;
-    destination: string;
-    weight: string;
-    dimensions: string;
-  };
+    trackingNumber: string
+    service: string
+    origin: string
+    destination: string
+    weight: string
+    dimensions: string
+  }
   pricing: {
-    basePrice: number;
-    insurance?: number;
-    tax: number;
-    discount?: number;
-    total: number;
-  };
-  paymentId?: string;
+    basePrice: number
+    insurance?: number
+    tax: number
+    discount?: number
+    total: number
+  }
+  paymentId?: string
 }
 
 export default function PaymentSummary({
@@ -40,15 +40,15 @@ export default function PaymentSummary({
   pricing,
   paymentId,
 }: PaymentSummaryProps) {
-  const [generatingInvoice, setGeneratingInvoice] = useState(false);
+  const [generatingInvoice, setGeneratingInvoice] = useState(false)
 
   const generateInvoice = async () => {
-    setGeneratingInvoice(true);
+    setGeneratingInvoice(true)
     try {
-      const pdfDoc = await PDFDocument.create();
-      const page = pdfDoc.addPage([600, 800]);
-      const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-      const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const pdfDoc = await PDFDocument.create()
+      const page = pdfDoc.addPage([600, 800])
+      const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+      const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica)
 
       // Header
       page.drawText('INVOICE', {
@@ -56,7 +56,7 @@ export default function PaymentSummary({
         y: 750,
         size: 24,
         font,
-      });
+      })
 
       // Order Details
       page.drawText('Order Details', {
@@ -64,7 +64,7 @@ export default function PaymentSummary({
         y: 700,
         size: 16,
         font,
-      });
+      })
 
       const orderDetailsText = [
         `Tracking Number: ${orderDetails.trackingNumber}`,
@@ -73,7 +73,7 @@ export default function PaymentSummary({
         `Destination: ${orderDetails.destination}`,
         `Weight: ${orderDetails.weight}`,
         `Dimensions: ${orderDetails.dimensions}`,
-      ];
+      ]
 
       orderDetailsText.forEach((text, index) => {
         page.drawText(text, {
@@ -81,8 +81,8 @@ export default function PaymentSummary({
           y: 670 - (index * 20),
           size: 12,
           font: regularFont,
-        });
-      });
+        })
+      })
 
       // Pricing Details
       page.drawText('Pricing Details', {
@@ -90,7 +90,7 @@ export default function PaymentSummary({
         y: 520,
         size: 16,
         font,
-      });
+      })
 
       const pricingDetails = [
         `Base Price: $${pricing.basePrice.toFixed(2)}`,
@@ -98,7 +98,7 @@ export default function PaymentSummary({
         `Tax: $${pricing.tax.toFixed(2)}`,
         pricing.discount && `Discount: -$${pricing.discount.toFixed(2)}`,
         `Total: $${pricing.total.toFixed(2)}`,
-      ].filter(Boolean);
+      ].filter(Boolean)
 
       pricingDetails.forEach((text, index) => {
         page.drawText(text as string, {
@@ -106,8 +106,8 @@ export default function PaymentSummary({
           y: 490 - (index * 20),
           size: 12,
           font: regularFont,
-        });
-      });
+        })
+      })
 
       // Footer
       page.drawText(`Payment ID: ${paymentId || 'Pending'}`, {
@@ -115,21 +115,23 @@ export default function PaymentSummary({
         y: 50,
         size: 10,
         font: regularFont,
-      });
+      })
 
-      const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `invoice_${orderDetails.trackingNumber}.pdf`;
-      link.click();
-    } catch (error) {
-      console.error('Error generating invoice:', error);
-    } finally {
-      setGeneratingInvoice(false);
+      const pdfBytes = await pdfDoc.save()
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `invoice_${orderDetails.trackingNumber}.pdf`
+      link.click()
     }
-  };
+    catch (error) {
+      console.error('Error generating invoice:', error)
+    }
+    finally {
+      setGeneratingInvoice(false)
+    }
+  }
 
   return (
     <Paper elevation={2} sx={{ p: 3 }}>
@@ -170,30 +172,41 @@ export default function PaymentSummary({
       <List disablePadding>
         <ListItem>
           <ListItemText primary="Base Price" />
-          <Typography variant="body2">${pricing.basePrice.toFixed(2)}</Typography>
+          <Typography variant="body2">
+            $
+            {pricing.basePrice.toFixed(2)}
+          </Typography>
         </ListItem>
         {pricing.insurance && (
           <ListItem>
             <ListItemText primary="Insurance" />
-            <Typography variant="body2">${pricing.insurance.toFixed(2)}</Typography>
+            <Typography variant="body2">
+              $
+              {pricing.insurance.toFixed(2)}
+            </Typography>
           </ListItem>
         )}
         <ListItem>
           <ListItemText primary="Tax" />
-          <Typography variant="body2">${pricing.tax.toFixed(2)}</Typography>
+          <Typography variant="body2">
+            $
+            {pricing.tax.toFixed(2)}
+          </Typography>
         </ListItem>
         {pricing.discount && (
           <ListItem>
             <ListItemText primary="Discount" />
             <Typography variant="body2" color="error">
-              -${pricing.discount.toFixed(2)}
+              -$
+              {pricing.discount.toFixed(2)}
             </Typography>
           </ListItem>
         )}
         <ListItem>
           <ListItemText primary="Total" />
           <Typography variant="h6" color="primary">
-            ${pricing.total.toFixed(2)}
+            $
+            {pricing.total.toFixed(2)}
           </Typography>
         </ListItem>
       </List>
@@ -202,21 +215,23 @@ export default function PaymentSummary({
         <Button
           startIcon={<ReceiptIcon />}
           variant="outlined"
-          onClick={generateInvoice}
+          onClick={() => void generateInvoice()}
           disabled={generatingInvoice}
           fullWidth
         >
-          {generatingInvoice ? (
-            <CircularProgress size={24} />
-          ) : (
-            'Generate Invoice'
-          )}
+          {generatingInvoice
+            ? (
+                <CircularProgress size={24} />
+              )
+            : (
+                'Generate Invoice'
+              )}
         </Button>
         {paymentId && (
           <Button
             startIcon={<DownloadIcon />}
             variant="outlined"
-            onClick={generateInvoice}
+            onClick={() => void generateInvoice()}
             disabled={generatingInvoice}
             fullWidth
           >
@@ -225,5 +240,5 @@ export default function PaymentSummary({
         )}
       </Box>
     </Paper>
-  );
+  )
 }

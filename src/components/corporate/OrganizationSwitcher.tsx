@@ -1,141 +1,141 @@
 import {
-  Box,
-  Button,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
-  Divider,
-  Typography,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
-import {
-  Business as BusinessIcon,
-  Add as AddIcon,
-  Settings as SettingsIcon,
-  ExitToApp as LeaveIcon,
-} from '@mui/icons-material';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  useUser,
   useClerk,
   useOrganization,
   useOrganizationList,
-} from '@clerk/clerk-react';
+} from '@clerk/clerk-react'
+import {
+  Add as AddIcon,
+  Business as BusinessIcon,
+  Settings as SettingsIcon,
+} from '@mui/icons-material'
+import {
+  Alert,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  TextField,
+  Typography,
+} from '@mui/material'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 interface Organization {
-  id: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-  membersCount: number;
-  publicMetadata: Record<string, unknown>;
-  slug?: string;
-  imageUrl?: string;
+  id: string
+  name: string
+  createdAt: string
+  updatedAt: string
+  membersCount: number
+  publicMetadata: Record<string, unknown>
+  slug?: string
+  imageUrl?: string
 }
 
 interface OrganizationMembership {
-  id: string;
-  role: string;
-  organization: Organization;
-  publicMetadata: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
+  id: string
+  role: string
+  organization: Organization
+  publicMetadata: Record<string, unknown>
+  createdAt: string
+  updatedAt: string
 }
 
 export default function OrganizationSwitcher() {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [newOrgName, setNewOrgName] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [newOrgName, setNewOrgName] = useState('')
+  const [isCreating, setIsCreating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
-  const navigate = useNavigate();
-  const { user } = useUser();
-  const clerk = useClerk();
-  const { organization } = useOrganization();
-  const { userMemberships, createOrganization } = useOrganizationList();
+  const navigate = useNavigate()
+  const clerk = useClerk()
+  const { organization } = useOrganization()
+  const { userMemberships, createOrganization } = useOrganizationList()
 
   // Safe type assertion since we know the structure matches
-  const memberships = (userMemberships?.data || []) as unknown as OrganizationMembership[];
+  const memberships = (userMemberships?.data || []) as unknown as OrganizationMembership[]
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
+    setAnchorEl(event.currentTarget)
+  }
 
   const handleClose = () => {
-    setAnchorEl(null);
-  };
+    setAnchorEl(null)
+  }
 
   const handleCreateClick = () => {
-    handleClose();
-    setCreateDialogOpen(true);
-  };
+    handleClose()
+    setCreateDialogOpen(true)
+  }
 
   const handleCreateClose = () => {
-    setCreateDialogOpen(false);
-    setNewOrgName('');
-    setError(null);
-    setSuccess(null);
-  };
+    setCreateDialogOpen(false)
+    setNewOrgName('')
+    setError(null)
+    setSuccess(null)
+  }
 
   const handleCreateOrganization = async () => {
-    if (!newOrgName.trim() || !createOrganization) return;
+    if (!newOrgName.trim() || !createOrganization)
+      return
 
-    setIsCreating(true);
-    setError(null);
-    setSuccess(null);
+    setIsCreating(true)
+    setError(null)
+    setSuccess(null)
 
     try {
-      const org = await createOrganization({ name: newOrgName });
-      setSuccess(`Organization "${newOrgName}" created successfully`);
-      
+      const org = await createOrganization({ name: newOrgName })
+      setSuccess(`Organization "${newOrgName}" created successfully`)
+
       // Close dialog after a short delay to show success message
       setTimeout(() => {
-        handleCreateClose();
+        handleCreateClose()
         // Switch to the new organization
         if (org) {
-          clerk.setActive({ organization: org.id }).then(() => {
-            navigate('/corporate/onboarding');
-          });
+          void clerk.setActive({ organization: org.id }).then(() => {
+            void navigate('/corporate/onboarding')
+          })
         }
-      }, 1500);
-    } catch (err) {
-      console.error('Error creating organization:', err);
-      setError('Failed to create organization. Please try again.');
-    } finally {
-      setIsCreating(false);
+      }, 1500)
     }
-  };
+    catch (err) {
+      console.error('Error creating organization:', err)
+      setError('Failed to create organization. Please try again.')
+    }
+    finally {
+      setIsCreating(false)
+    }
+  }
 
   const handleSwitchOrganization = async (orgId: string) => {
-    handleClose();
+    handleClose()
     try {
       const membership = memberships.find(
-        (mem) => mem.organization.id === orgId
-      );
+        mem => mem.organization.id === orgId,
+      )
       if (membership) {
-        await clerk.setActive({ organization: orgId });
-        navigate('/corporate');
+        await clerk.setActive({ organization: orgId })
+        void navigate('/corporate')
       }
-    } catch (err) {
-      console.error('Error switching organization:', err);
-      setError('Failed to switch organization. Please try again.');
     }
-  };
+    catch (err) {
+      console.error('Error switching organization:', err)
+      setError('Failed to switch organization. Please try again.')
+    }
+  }
 
   const handleManageOrganizations = () => {
-    handleClose();
-    navigate('/corporate/settings/organizations');
-  };
+    handleClose()
+    void navigate('/corporate/settings/organizations')
+  }
 
   return (
     <>
@@ -165,10 +165,12 @@ export default function OrganizationSwitcher() {
           horizontal: 'right',
         }}
       >
-        {memberships.map((membership) => (
+        {memberships.map(membership => (
           <MenuItem
             key={membership.organization.id}
-            onClick={() => handleSwitchOrganization(membership.organization.id)}
+            onClick={() => {
+              void handleSwitchOrganization(membership.organization.id)
+            }}
             selected={membership.organization.id === organization?.id}
           >
             <ListItemIcon>
@@ -221,7 +223,7 @@ export default function OrganizationSwitcher() {
             label="Organization Name"
             fullWidth
             value={newOrgName}
-            onChange={(e) => setNewOrgName(e.target.value)}
+            onChange={e => setNewOrgName(e.target.value)}
             disabled={isCreating}
           />
         </DialogContent>
@@ -239,5 +241,5 @@ export default function OrganizationSwitcher() {
         </DialogActions>
       </Dialog>
     </>
-  );
+  )
 }

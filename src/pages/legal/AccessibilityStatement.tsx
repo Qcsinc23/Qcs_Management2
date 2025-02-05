@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react'
+import { Link } from 'react-router-dom'
 
 const AccessibilityStatement: React.FC = () => {
   return (
@@ -101,7 +101,8 @@ const AccessibilityStatement: React.FC = () => {
             <li>Email: accessibility@qcsmanagement.com</li>
             <li>Phone: +1 (555) 123-4567</li>
             <li>
-              Feedback form: Available through our{' '}
+              Feedback form: Available through our
+              {' '}
               <Link to="/contact" className="text-blue-600 hover:text-blue-800">
                 Contact page
               </Link>
@@ -121,15 +122,21 @@ const AccessibilityStatement: React.FC = () => {
 
       <div className="mt-8 border-t pt-6">
         <p className="text-sm text-gray-600">
-          Last updated: {new Date().toLocaleDateString()}
+          Last updated:
+          {' '}
+          {new Date().toLocaleDateString()}
         </p>
         <p className="text-sm text-gray-600 mt-2">
-          This statement was created on {new Date().toLocaleDateString()} using the W3C
+          This statement was created on
+          {' '}
+          {new Date().toLocaleDateString()}
+          {' '}
+          using the W3C
           Accessibility Statement Generator Tool.
         </p>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AccessibilityStatement;
+export default AccessibilityStatement

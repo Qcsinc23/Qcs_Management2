@@ -1,27 +1,28 @@
-import { useUser, useClerk } from '@clerk/clerk-react';
-import { fetchOrganizationDetails, OrganizationDetails } from './services/organization';
-import { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import type { OrganizationDetails } from './services/organization'
+import { useClerk, useUser } from '@clerk/clerk-react'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { fetchOrganizationDetails } from './services/organization'
 
 // Generate a random nonce
 export function generateNonce() {
-  const array = new Uint8Array(16);
-  crypto.getRandomValues(array);
-  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  const array = new Uint8Array(16)
+  crypto.getRandomValues(array)
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
 }
 
 // Store the current nonce
-let currentNonce = generateNonce();
+let currentNonce = generateNonce()
 
 // Function to get the current nonce
 export function getCurrentNonce() {
-  return currentNonce;
+  return currentNonce
 }
 
 // Function to refresh the nonce
 export function refreshNonce() {
-  currentNonce = generateNonce();
-  return currentNonce;
+  currentNonce = generateNonce()
+  return currentNonce
 }
 
 // Enhanced CSP configuration for Clerk with additional security headers
@@ -91,56 +92,57 @@ export function getSecurityHeaders() {
     'X-Frame-Options': 'DENY',
     'X-XSS-Protection': '1; mode=block',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
-    'Permissions-Policy': 'geolocation=(), microphone=(), camera=()'
-  };
+    'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
+  }
 }
 
 // Export security headers for server-side use
-export const SECURITY_HEADERS = getSecurityHeaders();
+export const SECURITY_HEADERS = getSecurityHeaders()
 
 // Apply security headers to all responses
-export const applySecurityHeaders = (response: Response) => {
-  const headers = getSecurityHeaders();
-  const newHeaders = new Headers(response.headers);
-  
+export function applySecurityHeaders(response: Response) {
+  const headers = getSecurityHeaders()
+  const newHeaders = new Headers(response.headers)
+
   // Add security headers to the new Headers object
   Object.entries(headers).forEach(([header, value]) => {
-    newHeaders.set(header, value);
-  });
+    newHeaders.set(header, value)
+  })
 
   // Create a new Response with the modified headers
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
-    headers: newHeaders
-  });
-};
+    headers: newHeaders,
+  })
+}
 
 interface OrganizationMetadata {
-  id: string;
-  name: string;
-  lastUpdated?: number;
-  [key: string]: unknown;
+  id: string
+  name: string
+  lastUpdated?: number
+  [key: string]: unknown
 }
 
 interface UseAuthMiddlewareProps {
-  requireAuth?: boolean;
-  requireOnboarding?: boolean;
-  allowedUserTypes?: Array<'retail' | 'corporate'>;
-  requireOrganization?: boolean;
+  requireAuth?: boolean
+  requireOnboarding?: boolean
+  allowedUserTypes?: Array<'retail' | 'corporate'>
+  requireOrganization?: boolean
 }
 
 // Helper function to validate organization
 function validateOrganization(organization: unknown): organization is OrganizationMetadata {
-  if (!organization || typeof organization !== 'object') return false;
-  const org = organization as Record<string, unknown>;
+  if (!organization || typeof organization !== 'object')
+    return false
+  const org = organization as Record<string, unknown>
   return (
-    typeof org.id === 'string' &&
-    org.id.length > 0 &&
-    typeof org.name === 'string' &&
-    org.name.length > 0 &&
-    (org.lastUpdated === undefined || typeof org.lastUpdated === 'number')
-  );
+    typeof org.id === 'string'
+    && org.id.length > 0
+    && typeof org.name === 'string'
+    && org.name.length > 0
+    && (org.lastUpdated === undefined || typeof org.lastUpdated === 'number')
+  )
 }
 
 // Helper function to validate session token
@@ -148,29 +150,32 @@ async function validateSessionToken(session: ReturnType<typeof useClerk>['sessio
   const token = await session?.getToken({
     leewayInSeconds: 120,
     template: 'organization_validation',
-    skipCache: true
-  });
+    skipCache: true,
+  })
 
-  if (!token) throw new Error('Failed to get valid session token');
-  return token;
+  if (!token)
+    throw new Error('Failed to get valid session token')
+  return token
 }
 
 // Helper function to validate and parse organization from cache
 function parseOrganizationCache(cachedData: string | null, orgId: string): OrganizationDetails | null {
-  if (!cachedData) return null;
+  if (!cachedData)
+    return null
   try {
-    const parsed = JSON.parse(cachedData);
+    const parsed = JSON.parse(cachedData)
     if (
-      parsed?.id === orgId &&
-      parsed?.name &&
-      Date.now() - (parsed.cachedAt || 0) < 5 * 60 * 1000
+      parsed?.id === orgId
+      && parsed?.name
+      && Date.now() - (parsed.cachedAt || 0) < 5 * 60 * 1000
     ) {
-      return parsed;
+      return parsed
     }
-  } catch {
-    return null;
   }
-  return null;
+  catch {
+    return null
+  }
+  return null
 }
 
 export function useAuthMiddleware({
@@ -179,57 +184,59 @@ export function useAuthMiddleware({
   allowedUserTypes = [],
   requireOrganization = false,
 }: UseAuthMiddlewareProps = {}) {
-  const { isLoaded, isSignedIn, user } = useUser();
-  const { session } = useClerk();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const { isLoaded, isSignedIn, user } = useUser()
+  const { session } = useClerk()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded)
+      return
 
     const handleAuth = async () => {
-      if (isProcessing) return;
-      setIsProcessing(true);
+      if (isProcessing)
+        return
+      setIsProcessing(true)
 
       try {
         // If authentication is required and user is not signed in
         if (requireAuth && !isSignedIn) {
-          const searchParams = new URLSearchParams();
-          searchParams.set('redirect_url', location.pathname + location.search);
-          
+          const searchParams = new URLSearchParams()
+          searchParams.set('redirect_url', location.pathname + location.search)
+
           // Get user type from URL path or localStorage
-          let userType = location.pathname.split('/')[1];
+          let userType = location.pathname.split('/')[1]
           if (userType !== 'retail' && userType !== 'corporate') {
-            userType = localStorage.getItem('userType') || '';
+            userType = localStorage.getItem('userType') || ''
           }
-          
+
           if (userType) {
-            searchParams.set('userType', userType);
-            localStorage.setItem('userType', userType);
+            searchParams.set('userType', userType)
+            localStorage.setItem('userType', userType)
           }
 
           // Store current state in session storage
           sessionStorage.setItem('preAuthState', JSON.stringify({
             path: location.pathname,
             search: location.search,
-            state: location.state
-          }));
-          
-          navigate(`/sign-in?${searchParams.toString()}`);
-          return;
+            state: location.state,
+          }))
+
+          navigate(`/sign-in?${searchParams.toString()}`)
+          return
         }
 
         // Restore pre-auth state if available
-        const preAuthState = sessionStorage.getItem('preAuthState');
+        const preAuthState = sessionStorage.getItem('preAuthState')
         if (preAuthState && isSignedIn) {
-          const { path, search, state } = JSON.parse(preAuthState);
-          sessionStorage.removeItem('preAuthState');
-          
+          const { path, search, state } = JSON.parse(preAuthState)
+          sessionStorage.removeItem('preAuthState')
+
           // Only restore if the current path is the sign-in page
           if (location.pathname === '/sign-in') {
-            navigate(path + search, { state, replace: true });
-            return;
+            navigate(path + search, { state, replace: true })
+            return
           }
         }
 
@@ -237,19 +244,19 @@ export function useAuthMiddleware({
         if (isSignedIn && user) {
           // Validate session state
           if (!session) {
-            throw new Error('Session is not available');
+            throw new Error('Session is not available')
           }
 
           // Debug user metadata state
           console.log('User Metadata State:', {
             hasMetadata: !!user.unsafeMetadata,
             metadataType: typeof user.unsafeMetadata,
-            metadata: user.unsafeMetadata
-          });
+            metadata: user.unsafeMetadata,
+          })
 
           // Ensure metadata exists with proper typing
           if (!user.unsafeMetadata || typeof user.unsafeMetadata !== 'object') {
-            console.log('Initializing user metadata...');
+            console.log('Initializing user metadata...')
             try {
               const updateResult = await user.update({
                 unsafeMetadata: {
@@ -257,73 +264,76 @@ export function useAuthMiddleware({
                   onboardingComplete: false,
                   currentOrganization: null,
                   metadataVersion: 1,
-                  onboardingCompletedAt: null
-                }
-              });
-              console.log('Metadata update result:', updateResult);
-              
-              await session.reload();
-              console.log('Session reloaded after metadata init');
-              return; // Allow useEffect to trigger again with updated metadata
-            } catch (error) {
-              console.error('Failed to initialize metadata:', error);
-              throw error;
+                  onboardingCompletedAt: null,
+                },
+              })
+              console.log('Metadata update result:', updateResult)
+
+              await session.reload()
+              console.log('Session reloaded after metadata init')
+              return // Allow useEffect to trigger again with updated metadata
+            }
+            catch (error) {
+              console.error('Failed to initialize metadata:', error)
+              throw error
             }
           }
 
           // Extract and validate user type and onboarding status
-          const userType = user.unsafeMetadata.userType as string | undefined;
-          const onboardingComplete = user.unsafeMetadata.onboardingComplete as boolean | undefined;
-          
+          const userType = user.unsafeMetadata.userType as string | undefined
+          const onboardingComplete = user.unsafeMetadata.onboardingComplete as boolean | undefined
+
           console.log('User Status:', {
             userType,
             onboardingComplete,
             allowedTypes: allowedUserTypes,
             requiresOnboarding: requireOnboarding,
-            currentPath: location.pathname
-          });
+            currentPath: location.pathname,
+          })
 
           // Check if user type is allowed
           if (allowedUserTypes.length > 0) {
           // If user doesn't have a type yet, check localStorage and URL path
-          if (!userType) {
-            const storedType = localStorage.getItem('userType');
-            const pathType = location.pathname.split('/')[1];
-            
-            // Determine type from most reliable source - prioritize path over stored type
-            // This ensures the user's selected type during sign-in takes precedence
-            const determinedType = 
-              allowedUserTypes.includes(pathType as 'retail' | 'corporate') ? pathType :
-              storedType && allowedUserTypes.includes(storedType as 'retail' | 'corporate') ? storedType :
-              null;
+            if (!userType) {
+              const storedType = localStorage.getItem('userType')
+              const pathType = location.pathname.split('/')[1]
 
-            if (determinedType) {
-              await user.update({
-                unsafeMetadata: {
-                  ...user.unsafeMetadata,
-                  userType: determinedType,
-                  onboardingComplete: false,
-                  onboardingCompletedAt: null
-                }
-              });
-              await session?.reload();
-              
-              // Store type in localStorage for consistency
-              localStorage.setItem('userType', determinedType);
-              
-              // Redirect to onboarding with proper state
-              navigate(`/${determinedType}/onboarding`, {
-                state: {
-                  from: location.pathname,
-                  requiresOnboarding: true,
-                  userType: determinedType
-                },
-                replace: true
-              });
-              return;
+              // Determine type from most reliable source - prioritize path over stored type
+              // This ensures the user's selected type during sign-in takes precedence
+              const determinedType
+              = allowedUserTypes.includes(pathType as 'retail' | 'corporate')
+                ? pathType
+                : storedType && allowedUserTypes.includes(storedType as 'retail' | 'corporate')
+                  ? storedType
+                  : null
+
+              if (determinedType) {
+                await user.update({
+                  unsafeMetadata: {
+                    ...user.unsafeMetadata,
+                    userType: determinedType,
+                    onboardingComplete: false,
+                    onboardingCompletedAt: null,
+                  },
+                })
+                await session?.reload()
+
+                // Store type in localStorage for consistency
+                localStorage.setItem('userType', determinedType)
+
+                // Redirect to onboarding with proper state
+                navigate(`/${determinedType}/onboarding`, {
+                  state: {
+                    from: location.pathname,
+                    requiresOnboarding: true,
+                    userType: determinedType,
+                  },
+                  replace: true,
+                })
+                return
+              }
             }
-          }
-              
+
             // If user has a type that's not allowed, redirect with proper state
             if (userType && !allowedUserTypes.includes(userType as 'retail' | 'corporate')) {
               navigate(`/${userType}`, {
@@ -331,11 +341,11 @@ export function useAuthMiddleware({
                   from: location.pathname,
                   restricted: true,
                   allowedTypes: allowedUserTypes,
-                  currentType: userType
+                  currentType: userType,
                 },
-                replace: true
-              });
-              return;
+                replace: true,
+              })
+              return
             }
           }
 
@@ -345,49 +355,50 @@ export function useAuthMiddleware({
               state: {
                 from: location.pathname,
                 requiresOnboarding: true,
-                userType: userType
+                userType,
               },
-              replace: true
-            });
-            return;
+              replace: true,
+            })
+            return
           }
 
           // Check if organization is required (for corporate users)
           // Skip organization check for the first 5 minutes after onboarding completion
-          const onboardingCompletionTime = user.unsafeMetadata?.onboardingCompletedAt as number;
-          const isInGracePeriod = onboardingCompletionTime && Date.now() - onboardingCompletionTime < 5 * 60 * 1000;
+          const onboardingCompletionTime = user.unsafeMetadata?.onboardingCompletedAt as number
+          const isInGracePeriod = onboardingCompletionTime && Date.now() - onboardingCompletionTime < 5 * 60 * 1000
 
           // Only check organization requirement if explicitly required and user is corporate
           if (requireOrganization && userType === 'corporate' && onboardingComplete && !isInGracePeriod && !location.pathname.includes('/onboarding')) {
             try {
-              const orgData = user?.unsafeMetadata?.currentOrganization;
+              const orgData = user?.unsafeMetadata?.currentOrganization
               if (!validateOrganization(orgData)) {
-                throw new Error('Invalid organization data');
+                throw new Error('Invalid organization data')
               }
 
-              const organization = orgData;
-              const lastUpdated = organization.lastUpdated ?? 0;
-              const refreshInterval = 12 * 60 * 60 * 1000;
+              const organization = orgData
+              const lastUpdated = organization.lastUpdated ?? 0
+              const refreshInterval = 12 * 60 * 60 * 1000
 
               if (Date.now() - lastUpdated > refreshInterval) {
                 const cachedOrg = parseOrganizationCache(
                   sessionStorage.getItem(`org_${organization.id}`),
-                  organization.id
-                );
+                  organization.id,
+                )
 
-                let updatedOrg: OrganizationDetails;
+                let updatedOrg: OrganizationDetails
                 if (cachedOrg) {
-                  updatedOrg = cachedOrg;
-                } else {
-                  const fetchedOrg = await fetchOrganizationDetails(organization.id);
+                  updatedOrg = cachedOrg
+                }
+                else {
+                  const fetchedOrg = await fetchOrganizationDetails(organization.id)
                   if (!fetchedOrg?.id || !fetchedOrg?.name) {
-                    throw new Error('Invalid organization data received');
+                    throw new Error('Invalid organization data received')
                   }
-                  updatedOrg = fetchedOrg;
+                  updatedOrg = fetchedOrg
                   sessionStorage.setItem(
                     `org_${organization.id}`,
-                    JSON.stringify({ ...updatedOrg, cachedAt: Date.now() })
-                  );
+                    JSON.stringify({ ...updatedOrg, cachedAt: Date.now() }),
+                  )
                 }
 
                 await user.update({
@@ -396,32 +407,33 @@ export function useAuthMiddleware({
                     currentOrganization: {
                       ...updatedOrg,
                       lastUpdated: Date.now(),
-                      validatedAt: Date.now()
-                    }
-                  }
-                });
+                      validatedAt: Date.now(),
+                    },
+                  },
+                })
 
-                await session?.reload();
+                await session?.reload()
               }
-            } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-              console.error('Organization validation error:', errorMessage);
+            }
+            catch (error) {
+              const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+              console.error('Organization validation error:', errorMessage)
               navigate('/corporate/onboarding', {
                 state: {
                   from: location.pathname,
                   error: 'organization_validation_failed',
-                  message: errorMessage
+                  message: errorMessage,
                 },
-                replace: true
-              });
-              return;
+                replace: true,
+              })
             }
           }
         }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        console.error('Authentication middleware error:', errorMessage);
-        
+      }
+      catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        console.error('Authentication middleware error:', errorMessage)
+
         // Redirect to error page with state
         navigate('/error', {
           state: {
@@ -429,41 +441,42 @@ export function useAuthMiddleware({
             message: errorMessage,
             timestamp: Date.now(),
             path: location.pathname,
-            securityHeaders: SECURITY_HEADERS
+            securityHeaders: SECURITY_HEADERS,
           },
-          replace: true
-        });
-      } finally {
-        setIsProcessing(false);
+          replace: true,
+        })
       }
-    };
+      finally {
+        setIsProcessing(false)
+      }
+    }
 
-    handleAuth();
+    handleAuth()
   }, [
-    isLoaded, 
-    isSignedIn, 
-    user, 
+    isLoaded,
+    isSignedIn,
+    user,
     location,
-    navigate, 
-    requireAuth, 
-    requireOnboarding, 
-    allowedUserTypes, 
-    requireOrganization, 
+    navigate,
+    requireAuth,
+    requireOnboarding,
+    allowedUserTypes,
+    requireOrganization,
     session,
-    isProcessing
-  ]);
+    isProcessing,
+  ])
 
-  const needsOnboarding = requireOnboarding && 
-    isSignedIn && 
-    user?.unsafeMetadata?.onboardingComplete === false;
+  const needsOnboarding = requireOnboarding
+    && isSignedIn
+    && user?.unsafeMetadata?.onboardingComplete === false
 
   return {
     isLoaded,
     isSignedIn,
     user,
     session,
-    needsOnboarding
-  };
+    needsOnboarding,
+  }
 }
 
 // Helper hook for protected routes
@@ -472,14 +485,14 @@ export function useProtectedRoute(options: UseAuthMiddlewareProps = {}) {
     requireAuth: true,
     requireOnboarding: true,
     ...options,
-  };
+  }
 
-  return useAuthMiddleware(defaultOptions);
+  return useAuthMiddleware(defaultOptions)
 }
 
 // Helper hook for public routes
 export function usePublicRoute() {
-  return useAuthMiddleware();
+  return useAuthMiddleware()
 }
 
 // Helper hook for retail routes
@@ -488,7 +501,7 @@ export function useRetailRoute(requireOnboarding = true) {
     requireAuth: true,
     requireOnboarding,
     allowedUserTypes: ['retail'],
-  });
+  })
 }
 
 // Helper hook for corporate routes
@@ -498,5 +511,5 @@ export function useCorporateRoute(requireOnboarding = true, requireOrganization 
     requireOnboarding,
     allowedUserTypes: ['corporate'],
     requireOrganization,
-  });
+  })
 }

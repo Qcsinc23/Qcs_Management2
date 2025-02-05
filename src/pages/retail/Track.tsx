@@ -1,5 +1,5 @@
-import { Box, Typography, Container } from '@mui/material';
-import PackageTracking from '../../components/retail/PackageTracking';
+import { Box, Container, Typography } from '@mui/material'
+import PackageTracking from '../../components/retail/PackageTracking'
 
 export default function Track() {
   return (
@@ -20,5 +20,5 @@ export default function Track() {
         <PackageTracking />
       </Container>
     </Box>
-  );
+  )
 }

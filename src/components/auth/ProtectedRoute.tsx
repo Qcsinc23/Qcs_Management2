@@ -1,102 +1,66 @@
-
-import { Box, CircularProgress } from '@mui/material';
-import { useRetailRoute, useCorporateRoute } from '../../middleware';
-import { useClerk } from '@clerk/clerk-react';
-import { useNavigate } from 'react-router-dom';
-import { useEffect, useState, useMemo } from 'react';
-
-// Moved outside component to prevent re-creation
-const LoadingSpinner = () => (
-  <Box
-    sx={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh',
-    }}
-  >
-    <CircularProgress />
-  </Box>
-);
+import { RedirectToSignIn, useAuth, useClerk } from '@clerk/clerk-react'
+import React, { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { LoggingService } from '../../services/LoggingService'
+import SecureStorageService from '../../services/SecureStorageService'
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
-  userType?: 'retail' | 'corporate';
-  requireOrganization?: boolean;
-  requireOnboarding?: boolean;
+  children: React.ReactNode
 }
 
-export default function ProtectedRoute({
-  children,
-  userType,
-  requireOrganization = false,
-  requireOnboarding = true,
-}: ProtectedRouteProps) {
-  // All hooks at the top level
-  const { session, loaded: isSessionLoaded } = useClerk();
-  const navigate = useNavigate();
-  const [isInitialized, setIsInitialized] = useState(false);
-  const retailAuth = useRetailRoute(requireOnboarding);
-  const corporateAuth = useCorporateRoute(requireOnboarding, requireOrganization);
+// List of allowed redirect URLs
+const ALLOWED_REDIRECT_URLS = ['/landing', '/signin']
 
-  // Use useMemo to memoize auth state selection
-  const authState = useMemo(() => {
-    if (!userType) return null;
-    return userType === 'retail' ? retailAuth : corporateAuth;
-  }, [userType, retailAuth, corporateAuth]);
+const isValidRedirectUrl = (url: string): boolean => {
+  return ALLOWED_REDIRECT_URLS.includes(url)
+}
 
-  // Destructure with default values to avoid null checks
-  const { isLoaded = false, isSignedIn = false, needsOnboarding = false } = authState ?? {};
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const { isLoaded, isSignedIn } = useAuth()
+  const { signOut } = useClerk()
+  const navigate = useNavigate()
+  const logger = LoggingService.getInstance()
+  const secureStorage = SecureStorageService.getInstance()
 
-  // Initialization effect
   useEffect(() => {
-    if (!isSessionLoaded) return;
-    
-    if (!isInitialized) {
-      console.log('ProtectedRoute Initialized:', {
-        userType,
-        requireOnboarding,
-        requireOrganization,
-        session: session?.id,
-        path: window.location.pathname
-      });
-      
-      if (authState) {
-        console.log('Auth State:', {
-          isLoaded: authState.isLoaded,
-          isSignedIn: authState.isSignedIn,
-          needsOnboarding: authState.needsOnboarding,
-          user: authState.user?.id
-        });
+    // Clean up session data on unmount
+    return () => {
+      if (!isSignedIn) {
+        secureStorage.clear()
       }
-
-      setIsInitialized(true);
     }
-  }, [isSessionLoaded, session, authState, isInitialized, userType, requireOnboarding, requireOrganization]);
+  }, [isSignedIn])
 
-  // Onboarding redirect effect
-  useEffect(() => {
-    if (isLoaded && isSignedIn && needsOnboarding && !window.location.pathname.includes('/onboarding')) {
-      const redirectPath = userType === 'retail' ? '/retail/onboarding' : '/corporate/onboarding';
-      console.log('Redirecting to onboarding:', redirectPath);
-      navigate(redirectPath);
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      secureStorage.clear()
+      const redirectUrl = '/landing'
+      if (isValidRedirectUrl(redirectUrl)) {
+        navigate(redirectUrl)
+      } else {
+        logger.error('Invalid redirect URL detected')
+        navigate('/landing')
+      }
+    } catch (error) {
+      logger.error('Error during sign out:', error)
+      navigate('/landing')
     }
-  }, [isLoaded, isSignedIn, needsOnboarding, userType, navigate]);
-
-  // Loading states
-  if (!isSessionLoaded || !isInitialized || !isLoaded) {
-    return <LoadingSpinner />;
   }
 
-  // No userType check - just verify session
-  if (!userType) {
-    return session ? <>{children}</> : null;
+  // Handle the loading state
+  if (!isLoaded) {
+    return <div>Loading...</div>
   }
 
-  // Auth check
+  // If the user is not signed in, redirect to the sign-in page
   if (!isSignedIn) {
-    return null;
+    logger.info('Unauthorized access attempt, redirecting to sign in')
+    return <RedirectToSignIn afterSignInUrl={window.location.pathname} />
   }
 
-  return <>{children}</>;
+  // If the user is signed in, render the protected content
+  return <>{children}</>
 }
+
+export default ProtectedRoute

@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 
 interface ProfileForm {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  company: string;
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  company: string
   notificationPreferences: {
-    email: boolean;
-    sms: boolean;
-    push: boolean;
-  };
+    email: boolean
+    sms: boolean
+    push: boolean
+  }
 }
 
 const Profile: React.FC = () => {
@@ -25,36 +25,37 @@ const Profile: React.FC = () => {
       sms: true,
       push: true,
     },
-  });
+  })
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [isEditing, setIsEditing] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    
+    const { name, value, type, checked } = e.target
+
     if (type === 'checkbox' && name.startsWith('notifications.')) {
-      const notificationType = name.split('.')[1];
+      const notificationType = name.split('.')[1]
       setFormData(prev => ({
         ...prev,
         notificationPreferences: {
           ...prev.notificationPreferences,
           [notificationType]: checked,
         },
-      }));
-    } else {
+      }))
+    }
+    else {
       setFormData(prev => ({
         ...prev,
         [name]: value,
-      }));
+      }))
     }
-  };
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaveStatus('success');
-    setIsEditing(false);
-  };
+    e.preventDefault()
+    setSaveStatus('success')
+    setIsEditing(false)
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -225,7 +226,7 @@ const Profile: React.FC = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Profile;
+export default Profile

@@ -1,4 +1,4 @@
-import { ReportItem } from '../types/reports';
+import type { ReportItem } from '../types/reports'
 
 // Mock data - replace with actual API calls
 const mockReports: ReportItem[] = [
@@ -8,26 +8,26 @@ const mockReports: ReportItem[] = [
     period: '2023-10',
     generatedAt: '2023-10-15T08:00:00Z',
     status: 'Ready',
-    downloadUrl: '#'
+    downloadUrl: '#',
   },
   {
-    id: '2', 
+    id: '2',
     type: 'Inventory',
     period: '2023-09',
     generatedAt: '2023-09-15T08:00:00Z',
     status: 'Ready',
-    downloadUrl: '#'
-  }
-];
+    downloadUrl: '#',
+  },
+]
 
-export const getReports = async (): Promise<ReportItem[]> => {
+export async function getReports(): Promise<ReportItem[]> {
   // Simulate network delay
-  return new Promise((resolve) => 
-    setTimeout(() => resolve(mockReports), 500)
-  );
-};
+  return new Promise(resolve =>
+    setTimeout(() => resolve(mockReports), 500),
+  )
+}
 
-export const generateReport = async (type: string, period: string): Promise<ReportItem> => {
+export async function generateReport(type: string, period: string): Promise<ReportItem> {
   return new Promise((resolve) => {
     setTimeout(() => {
       const newReport = {
@@ -36,10 +36,10 @@ export const generateReport = async (type: string, period: string): Promise<Repo
         period,
         generatedAt: new Date().toISOString(),
         status: 'Pending',
-        downloadUrl: '#'
-      };
-      mockReports.unshift(newReport);
-      resolve(newReport);
-    }, 500);
-  });
-};
+        downloadUrl: '#',
+      }
+      mockReports.unshift(newReport)
+      resolve(newReport)
+    }, 500)
+  })
+}

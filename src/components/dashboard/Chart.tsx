@@ -1,16 +1,16 @@
-import { Card, CardContent } from '@mui/material';
-import { Line } from 'react-chartjs-2';
+import { Card, CardContent } from '@mui/material'
 import {
-  Chart as ChartJS,
   CategoryScale,
+  Chart as ChartJS,
+  Legend,
   LinearScale,
-  PointElement,
   LineElement,
+  PointElement,
   Title,
   Tooltip,
-  Legend,
-} from 'chart.js';
-import { memo } from 'react';
+} from 'chart.js'
+import { memo } from 'react'
+import { Line } from 'react-chartjs-2'
 
 ChartJS.register(
   CategoryScale,
@@ -19,12 +19,12 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
-);
+  Legend,
+)
 
 interface ChartProps {
-  data: any;
-  options?: any;
+  data: any
+  options?: any
 }
 
 const Chart = memo(({ data, options }: ChartProps) => {
@@ -34,9 +34,9 @@ const Chart = memo(({ data, options }: ChartProps) => {
         <Line options={options} data={data} />
       </CardContent>
     </Card>
-  );
-});
+  )
+})
 
-Chart.displayName = 'Chart';
+Chart.displayName = 'Chart'
 
-export default Chart;
+export default Chart

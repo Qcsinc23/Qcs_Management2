@@ -1,22 +1,25 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react'
+import { Link } from 'react-router-dom'
 
 const PrivacyPolicy: React.FC = () => {
-  const lastUpdated = '2023-10-15'; // TODO: Update this date when making changes
+  const lastUpdated = '2023-10-15' // TODO: Update this date when making changes
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Privacy Policy</h1>
-        <p className="text-gray-500">Last updated: {lastUpdated}</p>
+        <p className="text-gray-500">
+          Last updated:
+          {lastUpdated}
+        </p>
       </div>
-      
+
       <div className="prose prose-blue max-w-none">
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">1. Introduction</h2>
           <p className="text-gray-600 mb-4">
-            QCS Management ("we", "our", "us") is committed to protecting your privacy. This 
-            Privacy Policy explains how we collect, use, disclose, and safeguard your information 
+            QCS Management ("we", "our", "us") is committed to protecting your privacy. This
+            Privacy Policy explains how we collect, use, disclose, and safeguard your information
             when you use our services.
           </p>
         </section>
@@ -27,10 +30,28 @@ const PrivacyPolicy: React.FC = () => {
             We collect several types of information, including:
           </p>
           <ul className="list-disc pl-6 text-gray-600 mb-4">
-            <li><strong>Personal Data:</strong> Name, email, phone number, shipping/billing addresses</li>
-            <li><strong>Payment Information:</strong> Credit card details, billing information</li>
-            <li><strong>Usage Data:</strong> IP address, browser type, pages visited, device information</li>
-            <li><strong>Cookies and Tracking Data:</strong> See our <Link to="/cookie-policy" className="text-blue-600 hover:text-blue-800">Cookie Policy</Link></li>
+            <li>
+              <strong>Personal Data:</strong>
+              {' '}
+              Name, email, phone number, shipping/billing addresses
+            </li>
+            <li>
+              <strong>Payment Information:</strong>
+              {' '}
+              Credit card details, billing information
+            </li>
+            <li>
+              <strong>Usage Data:</strong>
+              {' '}
+              IP address, browser type, pages visited, device information
+            </li>
+            <li>
+              <strong>Cookies and Tracking Data:</strong>
+              {' '}
+              See our
+              {' '}
+              <Link to="/cookie-policy" className="text-blue-600 hover:text-blue-800">Cookie Policy</Link>
+            </li>
           </ul>
         </section>
 
@@ -80,8 +101,8 @@ const PrivacyPolicy: React.FC = () => {
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">6. International Data Transfers</h2>
           <p className="text-gray-600 mb-4">
-            Your information may be transferred to and maintained on computers located outside 
-            your country. We ensure appropriate safeguards are in place for international 
+            Your information may be transferred to and maintained on computers located outside
+            your country. We ensure appropriate safeguards are in place for international
             transfers, including:
           </p>
           <ul className="list-disc pl-6 text-gray-600 mb-4">
@@ -135,7 +156,7 @@ const PrivacyPolicy: React.FC = () => {
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">10. Changes to This Policy</h2>
           <p className="text-gray-600 mb-4">
-            We may update this policy periodically. We will notify you of significant changes 
+            We may update this policy periodically. We will notify you of significant changes
             through our website or by email.
           </p>
         </section>
@@ -169,7 +190,7 @@ const PrivacyPolicy: React.FC = () => {
         </Link>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default PrivacyPolicy;
+export default PrivacyPolicy

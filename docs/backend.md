@@ -151,8 +151,8 @@
 ## Third-Party Libraries
 
 ### 1. Authentication and User Management
-- **Library**: **Clerk**  
-  - **Purpose**: Handle user authentication, role-based access control (RBAC), and user management.  
+- **Library**: **Clerk**
+  - **Purpose**: Handle user authentication, role-based access control (RBAC), and user management.
   - **Key Features**:
     - Secure login and signup flows.
     - Multi-factor authentication (MFA) support.
@@ -162,8 +162,8 @@
     - Store user roles and permissions in Clerk's dashboard.
 
 ### 2. Database and Backend Services
-- **Library**: **Supabase**  
-  - **Purpose**: Provide a scalable backend with PostgreSQL database, real-time capabilities, and storage.  
+- **Library**: **Supabase**
+  - **Purpose**: Provide a scalable backend with PostgreSQL database, real-time capabilities, and storage.
   - **Key Features**:
     - Auto-generated RESTful APIs for database tables.
     - Real-time updates using Supabase Realtime.
@@ -173,8 +173,8 @@
     - Set up row-level security (RLS) for data access control.
 
 ### 3. Payment Processing
-- **Library**: **Stripe**  
-  - **Purpose**: Handle payments for retail customers.  
+- **Library**: **Stripe**
+  - **Purpose**: Handle payments for retail customers.
   - **Key Features**:
     - Accept credit/debit cards, mobile wallets, and PayPal.
     - Process split payments for shared deliveries.
@@ -184,8 +184,8 @@
     - Set up webhooks for payment status updates.
 
 ### 4. Mapping and Routing
-- **Library**: **Google Maps API**  
-  - **Purpose**: Provide real-time routing and delivery tracking.  
+- **Library**: **Google Maps API**
+  - **Purpose**: Provide real-time routing and delivery tracking.
   - **Key Features**:
     - Display live location of delivery drivers.
     - Optimize delivery routes using traffic data.
@@ -195,8 +195,8 @@
     - Integrate Directions API and Distance Matrix API for route planning.
 
 ### 5. Notifications
-- **Library**: **Twilio**  
-  - **Purpose**: Send SMS notifications to users.  
+- **Library**: **Twilio**
+  - **Purpose**: Send SMS notifications to users.
   - **Key Features**:
     - Notify users about delivery status updates.
     - Send one-time passwords (OTPs) for MFA.

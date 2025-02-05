@@ -1,42 +1,42 @@
 import {
-  Box,
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  Alert,
-  Grid,
-  Card,
-  CardContent,
-  Stepper,
-  Step,
-  StepLabel,
-} from '@mui/material';
-import {
-  LocalShipping as TruckIcon,
-  AccessTime as TimeIcon,
   LocationOn as LocationIcon,
   Person as PersonIcon,
+  AccessTime as TimeIcon,
+  LocalShipping as TruckIcon,
   VerifiedUser as VerifiedIcon,
-} from '@mui/icons-material';
-import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+} from '@mui/icons-material'
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Grid,
+  Paper,
+  Step,
+  StepLabel,
+  Stepper,
+  TextField,
+  Typography,
+} from '@mui/material'
+import { useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 interface TrackingStatus {
-  status: 'pickup' | 'in-transit' | 'out-for-delivery' | 'delivered';
-  location: string;
-  timestamp: string;
-  description: string;
+  status: 'pickup' | 'in-transit' | 'out-for-delivery' | 'delivered'
+  location: string
+  timestamp: string
+  description: string
 }
 
 interface TrackingDetails {
-  trackingNumber: string;
-  status: TrackingStatus;
-  estimatedDelivery: string;
-  driverName?: string;
-  driverPhone?: string;
-  recipientName?: string;
-  deliveryAddress?: string;
+  trackingNumber: string
+  status: TrackingStatus
+  estimatedDelivery: string
+  driverName?: string
+  driverPhone?: string
+  recipientName?: string
+  deliveryAddress?: string
 }
 
 const mockTrackingSteps = [
@@ -56,43 +56,43 @@ const mockTrackingSteps = [
     label: 'Delivered',
     description: 'Package delivered successfully',
   },
-];
+]
 
-const getStepNumber = (status: TrackingStatus['status']) => {
+function getStepNumber(status: TrackingStatus['status']) {
   const statusMap = {
-    pickup: 0,
+    'pickup': 0,
     'in-transit': 1,
     'out-for-delivery': 2,
-    delivered: 3,
-  };
-  return statusMap[status];
-};
+    'delivered': 3,
+  }
+  return statusMap[status]
+}
 
 export default function PackageTracking() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [trackingNumber, setTrackingNumber] = useState('');
-  const [trackingDetails, setTrackingDetails] = useState<TrackingDetails | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [trackingNumber, setTrackingNumber] = useState('')
+  const [trackingDetails, setTrackingDetails] = useState<TrackingDetails | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   // Check if we have a tracking number from the location state
-  useState(() => {
-    const state = location.state as { trackingNumber?: string };
+  useEffect(() => {
+    const state = location.state as { trackingNumber?: string }
     if (state?.trackingNumber) {
-      setTrackingNumber(state.trackingNumber);
-      handleTrackPackage(state.trackingNumber);
+      setTrackingNumber(state.trackingNumber)
+      void handleTrackPackage(state.trackingNumber)
     }
-  });
+  }, [])
 
   const handleTrackPackage = async (number: string = trackingNumber) => {
     if (!number.trim()) {
-      setError('Please enter a tracking number');
-      return;
+      setError('Please enter a tracking number')
+      return
     }
 
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
       // Mock tracking details
       const mockDetails: TrackingDetails = {
@@ -108,31 +108,32 @@ export default function PackageTracking() {
         driverPhone: '+1 (555) 123-4567',
         recipientName: 'Jane Doe',
         deliveryAddress: '123 Main St, New York, NY 10001',
-      };
+      }
 
-      setTrackingDetails(mockDetails);
-      setError(null);
-    } catch (error) {
-      setError('Failed to fetch tracking information. Please try again.');
+      setTrackingDetails(mockDetails)
+      setError(null)
     }
-  };
+    catch (error) {
+      setError('Failed to fetch tracking information. Please try again.')
+    }
+  }
 
   const handleContactDriver = () => {
     // In a real implementation, this would integrate with a communication service
-    window.location.href = `tel:${trackingDetails?.driverPhone}`;
-  };
+    window.location.href = `tel:${trackingDetails?.driverPhone}`
+  }
 
   const handleConfirmDelivery = () => {
     if (trackingDetails) {
-      navigate('/retail/pod', {
+      void navigate('/retail/pod', {
         state: {
           trackingNumber: trackingDetails.trackingNumber,
           recipientName: trackingDetails.recipientName,
           deliveryAddress: trackingDetails.deliveryAddress,
         },
-      });
+      })
     }
-  };
+  }
 
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto' }}>
@@ -146,13 +147,13 @@ export default function PackageTracking() {
             fullWidth
             label="Tracking Number"
             value={trackingNumber}
-            onChange={(e) => setTrackingNumber(e.target.value)}
+            onChange={e => setTrackingNumber(e.target.value)}
             error={!!error}
             helperText={error}
           />
           <Button
             variant="contained"
-            onClick={() => handleTrackPackage()}
+            onClick={() => void handleTrackPackage()}
             sx={{ minWidth: 120 }}
           >
             Track
@@ -165,7 +166,7 @@ export default function PackageTracking() {
               activeStep={getStepNumber(trackingDetails.status.status)}
               alternativeLabel
             >
-              {mockTrackingSteps.map((step) => (
+              {mockTrackingSteps.map(step => (
                 <Step key={step.label}>
                   <StepLabel>{step.label}</StepLabel>
                 </Step>
@@ -186,13 +187,17 @@ export default function PackageTracking() {
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                       <TimeIcon sx={{ mr: 1 }} />
                       <Typography>
-                        Last Updated: {new Date(trackingDetails.status.timestamp).toLocaleString()}
+                        Last Updated:
+                        {' '}
+                        {new Date(trackingDetails.status.timestamp).toLocaleString()}
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <TruckIcon sx={{ mr: 1 }} />
                       <Typography>
-                        Estimated Delivery: {trackingDetails.estimatedDelivery}
+                        Estimated Delivery:
+                        {' '}
+                        {trackingDetails.estimatedDelivery}
                       </Typography>
                     </Box>
 
@@ -240,12 +245,14 @@ export default function PackageTracking() {
 
             <Box sx={{ mt: 4 }}>
               <Alert severity="info">
-                Your package is on track for delivery by {trackingDetails.estimatedDelivery}
+                Your package is on track for delivery by
+                {' '}
+                {trackingDetails.estimatedDelivery}
               </Alert>
             </Box>
           </Box>
         )}
       </Paper>
     </Box>
-  );
+  )
 }

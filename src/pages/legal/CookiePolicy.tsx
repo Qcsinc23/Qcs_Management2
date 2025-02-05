@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react'
+import { Link } from 'react-router-dom'
 
 const CookiePolicy: React.FC = () => {
   return (
@@ -23,19 +23,27 @@ const CookiePolicy: React.FC = () => {
           </p>
           <ul className="list-disc pl-6 text-gray-600 space-y-2">
             <li>
-              <strong>Essential Cookies:</strong> Required for the website to function properly,
+              <strong>Essential Cookies:</strong>
+              {' '}
+              Required for the website to function properly,
               including authentication and security.
             </li>
             <li>
-              <strong>Functionality Cookies:</strong> Help us remember your preferences and
+              <strong>Functionality Cookies:</strong>
+              {' '}
+              Help us remember your preferences and
               settings for a better user experience.
             </li>
             <li>
-              <strong>Analytics Cookies:</strong> Allow us to understand how visitors interact
+              <strong>Analytics Cookies:</strong>
+              {' '}
+              Allow us to understand how visitors interact
               with our website, helping us improve our services.
             </li>
             <li>
-              <strong>Performance Cookies:</strong> Help us understand and analyze the performance
+              <strong>Performance Cookies:</strong>
+              {' '}
+              Help us understand and analyze the performance
               of our website and any errors that occur.
             </li>
           </ul>
@@ -98,7 +106,8 @@ const CookiePolicy: React.FC = () => {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">Contact Us</h2>
           <p className="text-gray-600">
-            If you have any questions about our Cookie Policy, please{' '}
+            If you have any questions about our Cookie Policy, please
+            {' '}
             <Link to="/contact" className="text-blue-600 hover:text-blue-800">
               contact us
             </Link>
@@ -109,11 +118,13 @@ const CookiePolicy: React.FC = () => {
 
       <div className="mt-8 border-t pt-6">
         <p className="text-sm text-gray-600">
-          Last updated: {new Date().toLocaleDateString()}
+          Last updated:
+          {' '}
+          {new Date().toLocaleDateString()}
         </p>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default CookiePolicy;
+export default CookiePolicy

@@ -1,22 +1,22 @@
-import { Card, CardContent, Typography, Box, LinearProgress, alpha } from '@mui/material';
-import { memo } from 'react';
+import { alpha, Box, Card, CardContent, LinearProgress, Typography } from '@mui/material'
+import { memo } from 'react'
 
 interface DashboardCardProps {
-  title: string;
-  value: string;
-  icon: React.ReactNode;
-  color: string;
-  progress?: number;
+  title: string
+  value: string
+  icon: React.ReactNode
+  color: string
+  progress?: number
 }
 
 const DashboardCard = memo(({ title, value, icon, color, progress }: DashboardCardProps) => (
-  <Card 
-    sx={{ 
-      height: '100%',
-      transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+  <Card
+    sx={{
+      'height': '100%',
+      'transition': 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
       '&:hover': {
         transform: 'translateY(-4px)',
-        boxShadow: (theme) => theme.shadows[4],
+        boxShadow: theme => theme.shadows[4],
       },
     }}
   >
@@ -24,14 +24,14 @@ const DashboardCard = memo(({ title, value, icon, color, progress }: DashboardCa
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         <Box
           sx={{
-            backgroundColor: `${color}20`,
-            borderRadius: '50%',
-            p: 1,
-            mr: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'transform 0.2s ease-in-out',
+            'backgroundColor': `${color}20`,
+            'borderRadius': '50%',
+            'p': 1,
+            'mr': 2,
+            'display': 'flex',
+            'alignItems': 'center',
+            'justifyContent': 'center',
+            'transition': 'transform 0.2s ease-in-out',
             '&:hover': {
               transform: 'scale(1.1)',
             },
@@ -43,26 +43,26 @@ const DashboardCard = memo(({ title, value, icon, color, progress }: DashboardCa
           {title}
         </Typography>
       </Box>
-      <Typography 
-        variant="h4" 
-        component="div" 
-        sx={{ 
-          textAlign: 'center', 
+      <Typography
+        variant="h4"
+        component="div"
+        sx={{
+          textAlign: 'center',
           mt: 2,
-          color: (theme) => theme.palette.text.primary,
+          color: theme => theme.palette.text.primary,
         }}
       >
         {value}
       </Typography>
       {progress !== undefined && (
         <Box sx={{ mt: 2 }}>
-          <LinearProgress 
-            variant="determinate" 
-            value={progress} 
+          <LinearProgress
+            variant="determinate"
+            value={progress}
             sx={{
-              height: 8,
-              borderRadius: 4,
-              backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
+              'height': 8,
+              'borderRadius': 4,
+              'backgroundColor': theme => alpha(theme.palette.primary.main, 0.1),
               '& .MuiLinearProgress-bar': {
                 borderRadius: 4,
               },
@@ -72,8 +72,8 @@ const DashboardCard = memo(({ title, value, icon, color, progress }: DashboardCa
       )}
     </CardContent>
   </Card>
-));
+))
 
-DashboardCard.displayName = 'DashboardCard';
+DashboardCard.displayName = 'DashboardCard'
 
-export default DashboardCard;
+export default DashboardCard

@@ -1,112 +1,237 @@
-import { Grid, Typography, Box } from '@mui/material';
+import React from 'react'
+import { Box, Grid, useTheme } from '@mui/material'
 import {
-  Timeline as TimelineIcon,
-  LocalShipping as DeliveryIcon,
+  TrendingUp as TrendingUpIcon,
+  LocalShipping as ShippingIcon,
   Inventory as InventoryIcon,
-  Assignment as TaskIcon,
-  TrendingUp as MetricsIcon,
-} from '@mui/icons-material';
-import { useMemo } from 'react';
-import DashboardCard from '../components/dashboard/DashboardCard';
-import Chart from '../components/dashboard/Chart';
+  Assignment as AssignmentIcon,
+} from '@mui/icons-material'
+import { StatCard, MetricCard, DataCard } from '../components/common/Card'
+import { useNavigate } from 'react-router-dom'
+import { LoggingService } from '../services/LoggingService'
 
-const options = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      position: 'top' as const,
-    },
-    title: {
-      display: true,
-      text: 'Key Performance Indicators',
-    },
-  },
-};
+const Dashboard: React.FC = () => {
+  const theme = useTheme()
+  const navigate = useNavigate()
+  const logger = LoggingService.getInstance()
 
-const labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July'];
+  const handleNavigation = (path: string) => {
+    logger.info(`Navigating to ${path}`)
+    navigate(path)
+  }
 
-export default function Dashboard() {
-  // Memoize chart data to prevent regeneration on every render
-  const chartData = useMemo(() => ({
-    labels,
-    datasets: [
-      {
-        label: 'Sales',
-        data: labels.map(() => Math.floor(Math.random() * 1000)),
-        borderColor: 'rgb(255, 99, 132)',
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',
-      },
-      {
-        label: 'Expenses',
-        data: labels.map(() => Math.floor(Math.random() * 500)),
-        borderColor: 'rgb(53, 162, 235)',
-        backgroundColor: 'rgba(53, 162, 235, 0.5)',
-      },
-    ],
-  }), []); // Empty dependency array since we want this data to remain constant
-
-  // Memoize cards data
-  const cards = useMemo(() => [
+  const recentActivity = [
     {
-      title: "Upcoming Events",
-      value: "12",
-      icon: <TimelineIcon sx={{ color: '#2196f3' }} />,
-      color: "#2196f3"
+      id: '1',
+      type: 'delivery',
+      description: 'Order #12345 delivered successfully',
+      timestamp: '2 hours ago',
     },
     {
-      title: "Active Deliveries",
-      value: "8",
-      icon: <DeliveryIcon sx={{ color: '#4caf50' }} />,
-      color: "#4caf50",
-      progress: 60
+      id: '2',
+      type: 'booking',
+      description: 'New booking created #12346',
+      timestamp: '3 hours ago',
     },
     {
-      title: "Inventory Alerts",
-      value: "3",
-      icon: <InventoryIcon sx={{ color: '#f44336' }} />,
-      color: "#f44336"
+      id: '3',
+      type: 'inventory',
+      description: 'Low stock alert: Item XYZ',
+      timestamp: '4 hours ago',
     },
-    {
-      title: "Task Assignments",
-      value: "15",
-      icon: <TaskIcon sx={{ color: '#ff9800' }} />,
-      color: "#ff9800",
-      progress: 80
-    },
-    {
-      title: "Performance Metrics",
-      value: "92%",
-      icon: <MetricsIcon sx={{ color: '#9c27b0' }} />,
-      color: "#9c27b0"
-    }
-  ], []); // Empty dependency array since this data is static
+  ]
 
   return (
-    <Box>
-      <Typography variant="h4" sx={{ mb: 4 }}>
-        Dashboard
-      </Typography>
-
+    <Box sx={{ p: 3 }}>
       <Grid container spacing={3}>
-        {cards.slice(0, 3).map((card, index) => (
-          <Grid item xs={12} sm={6} md={4} key={index}>
-            <DashboardCard {...card} />
-          </Grid>
-        ))}
+        {/* Stats Row */}
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Total Deliveries"
+            value="1,250"
+            icon={<ShippingIcon />}
+            trend={{
+              value: 12,
+              label: 'vs last month',
+              direction: 'up',
+            }}
+            color="primary"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Success Rate"
+            value="94.4%"
+            icon={<TrendingUpIcon />}
+            trend={{
+              value: 4,
+              label: 'vs last month',
+              direction: 'up',
+            }}
+            color="success"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Active Inventory"
+            value="325"
+            icon={<InventoryIcon />}
+            trend={{
+              value: 2,
+              label: 'vs last month',
+              direction: 'down',
+            }}
+            color="warning"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Pending Orders"
+            value="48"
+            icon={<AssignmentIcon />}
+            trend={{
+              value: 8,
+              label: 'vs last month',
+              direction: 'up',
+            }}
+            color="info"
+          />
+        </Grid>
 
-        {cards.slice(3).map((card, index) => (
-          <Grid item xs={12} sm={6} md={6} key={index}>
-            <DashboardCard {...card} />
-          </Grid>
-        ))}
+        {/* Charts Row */}
+        <Grid item xs={12} md={8}>
+          <MetricCard
+            title="Delivery Performance"
+            value="1,180"
+            subtitle="Total deliveries this month"
+            chart={<Box sx={{ height: 300 }}>Chart Component Here</Box>}
+            height={400}
+          />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <MetricCard
+            title="Inventory Status"
+            value="87%"
+            subtitle="Current capacity utilization"
+            chart={<Box sx={{ height: 300 }}>Chart Component Here</Box>}
+            height={400}
+          />
+        </Grid>
 
-        <Grid item xs={12}>
-          <Box sx={{ height: 400 }}>
-            <Chart options={options} data={chartData} />
-          </Box>
+        {/* Activity and Tasks Row */}
+        <Grid item xs={12} md={6}>
+          <DataCard
+            title="Recent Activity"
+            data={
+              <Box>
+                {recentActivity.map(activity => (
+                  <Box
+                    key={activity.id}
+                    sx={{
+                      p: 2,
+                      '&:not(:last-child)': {
+                        borderBottom: `1px solid ${theme.palette.divider}`,
+                      },
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Box>
+                        <Box sx={{ fontWeight: 500, mb: 0.5 }}>
+                          {activity.description}
+                        </Box>
+                        <Box sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
+                          {activity.timestamp}
+                        </Box>
+                      </Box>
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            }
+            height={400}
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <DataCard
+            title="Quick Actions"
+            data={
+              <Grid container spacing={2} sx={{ p: 2 }}>
+                <Grid item xs={6}>
+                  <Box
+                    onClick={() => handleNavigation('/booking')}
+                    sx={{
+                      p: 2,
+                      textAlign: 'center',
+                      border: `1px solid ${theme.palette.divider}`,
+                      borderRadius: 1,
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: theme.palette.action.hover,
+                      },
+                    }}
+                  >
+                    New Booking
+                  </Box>
+                </Grid>
+                <Grid item xs={6}>
+                  <Box
+                    onClick={() => handleNavigation('/inventory')}
+                    sx={{
+                      p: 2,
+                      textAlign: 'center',
+                      border: `1px solid ${theme.palette.divider}`,
+                      borderRadius: 1,
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: theme.palette.action.hover,
+                      },
+                    }}
+                  >
+                    Manage Inventory
+                  </Box>
+                </Grid>
+                <Grid item xs={6}>
+                  <Box
+                    onClick={() => handleNavigation('/tracking')}
+                    sx={{
+                      p: 2,
+                      textAlign: 'center',
+                      border: `1px solid ${theme.palette.divider}`,
+                      borderRadius: 1,
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: theme.palette.action.hover,
+                      },
+                    }}
+                  >
+                    Track Deliveries
+                  </Box>
+                </Grid>
+                <Grid item xs={6}>
+                  <Box
+                    onClick={() => handleNavigation('/reports')}
+                    sx={{
+                      p: 2,
+                      textAlign: 'center',
+                      border: `1px solid ${theme.palette.divider}`,
+                      borderRadius: 1,
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: theme.palette.action.hover,
+                      },
+                    }}
+                  >
+                    View Reports
+                  </Box>
+                </Grid>
+              </Grid>
+            }
+            height={400}
+          />
         </Grid>
       </Grid>
     </Box>
-  );
+  )
 }
+
+export default Dashboard

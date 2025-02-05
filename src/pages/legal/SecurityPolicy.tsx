@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react'
+import { Link } from 'react-router-dom'
 
 const SecurityPolicy: React.FC = () => {
   return (
@@ -131,10 +131,13 @@ const SecurityPolicy: React.FC = () => {
 
       <div className="mt-8 border-t pt-6">
         <p className="text-sm text-gray-600">
-          Last updated: {new Date().toLocaleDateString()}
+          Last updated:
+          {' '}
+          {new Date().toLocaleDateString()}
         </p>
         <p className="text-sm text-gray-600 mt-2">
-          For more information about our security practices or to report concerns, please{' '}
+          For more information about our security practices or to report concerns, please
+          {' '}
           <Link to="/contact" className="text-blue-600 hover:text-blue-800">
             contact us
           </Link>
@@ -142,7 +145,7 @@ const SecurityPolicy: React.FC = () => {
         </p>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default SecurityPolicy;
+export default SecurityPolicy

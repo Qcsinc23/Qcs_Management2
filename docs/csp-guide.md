@@ -58,7 +58,7 @@ Content-Security-Policy: frame-ancestors 'self' https://trusted-site.com;
 
 ### Stripe.js Integration
 ```javascript
-Content-Security-Policy: 
+Content-Security-Policy:
   script-src 'self' https://js.stripe.com https://cdn.firebase.com https://cdn.supabase.com;
   frame-src 'self' https://js.stripe.com https://secure.clerk.com;
   connect-src 'self' https://api.stripe.com https://*.supabase.co https://*.firebaseio.com https://*.clerk.com;
@@ -110,7 +110,7 @@ Content-Security-Policy:
 
 ### Basic CSP Header
 ```javascript
-Content-Security-Policy: 
+Content-Security-Policy:
   default-src 'self';
   script-src 'self' https://js.stripe.com https://cdn.firebase.com https://cdn.supabase.com https://cdn.clerk.com;
   style-src 'self' 'unsafe-inline';
@@ -122,7 +122,7 @@ Content-Security-Policy:
 
 ### Production-Ready CSP
 ```javascript
-Content-Security-Policy: 
+Content-Security-Policy:
   default-src 'none';
   script-src 'self' https://js.stripe.com https://cdn.firebase.com https://cdn.supabase.com https://cdn.clerk.com;
   style-src 'self';

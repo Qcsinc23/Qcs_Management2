@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 
 const ContactUs: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -6,22 +6,22 @@ const ContactUs: React.FC = () => {
     email: '',
     subject: '',
     message: '',
-  });
+  })
 
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: value
-    }));
-  };
+      [name]: value,
+    }))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitStatus('success'); // In a real app, this would be set after API call
-  };
+    e.preventDefault()
+    setSubmitStatus('success') // In a real app, this would be set after API call
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -32,12 +32,13 @@ const ContactUs: React.FC = () => {
         <div>
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Get in Touch</h2>
-            
+
             <div className="space-y-4">
               <div>
                 <h3 className="font-medium text-gray-700">Address</h3>
                 <p className="text-gray-600">
-                  123 Business Street<br />
+                  123 Business Street
+                  <br />
                   City, State 12345
                 </p>
               </div>
@@ -55,8 +56,10 @@ const ContactUs: React.FC = () => {
               <div>
                 <h3 className="font-medium text-gray-700">Business Hours</h3>
                 <p className="text-gray-600">
-                  Monday - Friday: 9:00 AM - 6:00 PM<br />
-                  Saturday: 10:00 AM - 4:00 PM<br />
+                  Monday - Friday: 9:00 AM - 6:00 PM
+                  <br />
+                  Saturday: 10:00 AM - 4:00 PM
+                  <br />
                   Sunday: Closed
                 </p>
               </div>
@@ -158,7 +161,7 @@ const ContactUs: React.FC = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ContactUs;
+export default ContactUs

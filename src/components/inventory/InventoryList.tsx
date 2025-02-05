@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Box, Button, Card, Grid, Typography } from '@mui/material';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import useNotification from '../common/NotificationService';
-import { getInventory } from '../../services/inventory';
+import type { GridColDef } from '@mui/x-data-grid'
+import type { InventoryItem } from '../../types/inventory'
+import { Box, Button, Card, Grid, Typography } from '@mui/material'
+import { DataGrid } from '@mui/x-data-grid'
+import { useEffect, useState } from 'react'
+import { getInventory } from '../../services/inventory'
 
-import { InventoryItem } from '../../types/inventory';
+import useNotification from '../common/NotificationService'
 
 const columns: GridColDef[] = [
   { field: 'name', headerName: 'Name', width: 200 },
@@ -12,29 +13,31 @@ const columns: GridColDef[] = [
   { field: 'quantity', headerName: 'Quantity', width: 150 },
   { field: 'location', headerName: 'Location', width: 200 },
   { field: 'status', headerName: 'Status', width: 150 },
-];
+]
 
 export default function InventoryList() {
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const { notifyError } = useNotification();
+  const [inventory, setInventory] = useState<InventoryItem[]>([])
+  const [loading, setLoading] = useState(false)
+  const { notifyError } = useNotification()
 
   useEffect(() => {
     const fetchInventory = async () => {
       try {
-        setLoading(true);
-        const data = await getInventory();
-        setInventory(data);
-      } catch (error) {
-        notifyError('Failed to load inventory');
-        console.error('Error fetching inventory:', error);
-      } finally {
-        setLoading(false);
+        setLoading(true)
+        const data = await getInventory()
+        setInventory(data)
       }
-    };
+      catch (error) {
+        notifyError('Failed to load inventory')
+        console.error('Error fetching inventory:', error)
+      }
+      finally {
+        setLoading(false)
+      }
+    }
 
-    fetchInventory();
-  }, []);
+    void fetchInventory()
+  }, [])
 
   return (
     <Card>
@@ -68,5 +71,5 @@ export default function InventoryList() {
         </Box>
       </Box>
     </Card>
-  );
+  )
 }

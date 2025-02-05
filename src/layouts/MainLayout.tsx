@@ -1,206 +1,174 @@
-import { Box, AppBar, Toolbar, IconButton, Typography, Drawer, List, ListItem, ListItemIcon, ListItemText, useTheme, Divider } from '@mui/material';
+import type { ReactNode } from 'react'
+import React from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import {
-  Dashboard as DashboardIcon,
-  Event as EventIcon,
-  Inventory as InventoryIcon,
-  LocalShipping as LogisticsIcon,
-  Assessment as ReportIcon,
-  People as UserIcon,
-  Settings as SettingIcon,
+  Box,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material'
+import {
   Menu as MenuIcon,
-} from '@mui/icons-material';
-import { useState, useEffect } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
-import { UserButton, SignedIn, useUser } from '@clerk/clerk-react';
-import OrganizationSwitcher from '../components/corporate/OrganizationSwitcher';
+  Dashboard as DashboardIcon,
+  CalendarToday as EventIcon,
+  LocalShipping as ShippingIcon,
+  Inventory as InventoryIcon,
+  Assessment as ReportsIcon,
+  Settings as SettingsIcon,
+  Person as ProfileIcon,
+  DarkMode as DarkModeIcon,
+  LightMode as LightModeIcon,
+} from '@mui/icons-material'
+import { useTheme as useCustomTheme } from '../theme/ThemeContext'
 
-const drawerWidth = 240;
+interface MainLayoutProps {
+  children: ReactNode
+}
 
-const menuItems = [
-  { text: 'Dashboard', icon: <DashboardIcon />, path: '/corporate' },
-  { text: 'Events', icon: <EventIcon />, path: '/corporate/events' },
-  { text: 'Inventory', icon: <InventoryIcon />, path: '/corporate/inventory' },
-  { text: 'Logistics', icon: <LogisticsIcon />, path: '/corporate/logistics' },
-  { text: 'Reports', icon: <ReportIcon />, path: '/corporate/reports' },
-  { text: 'Users', icon: <UserIcon />, path: '/corporate/users' },
-  { text: 'Settings', icon: <SettingIcon />, path: '/corporate/settings' },
-];
+const DRAWER_WIDTH = 280
 
-export default function MainLayout() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const theme = useTheme();
-  const { user, isLoaded } = useUser();
-  const location = useLocation();
-  const [showNavigation, setShowNavigation] = useState(false);
-
-  useEffect(() => {
-    if (isLoaded && user) {
-      const onboardingComplete = user.unsafeMetadata?.onboardingComplete as boolean;
-      const userType = user.unsafeMetadata?.userType as string;
-      const shouldShowNav = onboardingComplete && userType === 'corporate';
-      
-      // Only update if the value actually changed to prevent unnecessary re-renders
-      if (shouldShowNav !== showNavigation) {
-        setShowNavigation(shouldShowNav);
-      }
-    }
-  }, [isLoaded, user, showNavigation]);
-
-  // If in onboarding, only show the main content without navigation
-  if (location.pathname.includes('/onboarding')) {
-    return (
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          mt: '64px',
-        }}
-      >
-        <AppBar position="fixed">
-          <Toolbar>
-            <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-              QCS Management
-            </Typography>
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-          </Toolbar>
-        </AppBar>
-        <Outlet />
-      </Box>
-    );
-  }
+const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+  const location = useLocation()
+  const theme = useTheme()
+  const { mode, toggleTheme } = useCustomTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+  const [mobileOpen, setMobileOpen] = React.useState(false)
 
   const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
+    setMobileOpen(!mobileOpen)
+  }
+
+  const isActiveRoute = (path: string): boolean => {
+    return location.pathname === path
+  }
+
+  const navigationItems = [
+    { path: '/', label: 'Dashboard', icon: <DashboardIcon /> },
+    { path: '/booking', label: 'Booking', icon: <ShippingIcon /> },
+    { path: '/tracking', label: 'Tracking', icon: <ShippingIcon /> },
+    { path: '/inventory', label: 'Inventory', icon: <InventoryIcon /> },
+    { path: '/events', label: 'Events', icon: <EventIcon /> },
+    { path: '/reports', label: 'Reports', icon: <ReportsIcon /> },
+    { path: '/profile', label: 'Profile', icon: <ProfileIcon /> },
+    { path: '/settings', label: 'Settings', icon: <SettingsIcon /> },
+  ]
 
   const drawer = (
-    <Box sx={{ overflow: 'auto' }}>
-      <Box sx={{ p: 2 }}>
-        <OrganizationSwitcher />
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ p: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          QCS Management
+        </Typography>
       </Box>
-      <Divider />
-      <List>
-        {menuItems.map((item) => (
+
+      <List sx={{ flex: 1, px: 2 }}>
+        {navigationItems.map((item) => (
           <ListItem
-            key={item.text}
+            key={item.path}
             component={Link}
             to={item.path}
-            onClick={() => setMobileOpen(false)}
             sx={{
+              borderRadius: 1,
+              mb: 0.5,
+              color: isActiveRoute(item.path)
+                ? theme.palette.primary.main
+                : theme.palette.text.primary,
+              backgroundColor: isActiveRoute(item.path)
+                ? theme.palette.primary.main + '10'
+                : 'transparent',
               '&:hover': {
                 backgroundColor: theme.palette.action.hover,
               },
-              textDecoration: 'none',
-              color: 'inherit',
             }}
           >
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.text} />
+            <ListItemIcon
+              sx={{
+                color: isActiveRoute(item.path)
+                  ? theme.palette.primary.main
+                  : theme.palette.text.primary,
+                minWidth: 40,
+              }}
+            >
+              {item.icon}
+            </ListItemIcon>
+            <ListItemText primary={item.label} />
           </ListItem>
         ))}
       </List>
+
+      <Box
+        sx={{
+          p: 2,
+          borderTop: `1px solid ${theme.palette.divider}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Typography variant="body2" color="text.secondary">
+          © 2025 QCS Management
+        </Typography>
+        <IconButton onClick={toggleTheme} size="small">
+          {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+        </IconButton>
+      </Box>
     </Box>
-  );
+  )
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-      <AppBar
-        position="fixed"
+      {isMobile && (
+        <IconButton
+          color="inherit"
+          aria-label="open drawer"
+          edge="start"
+          onClick={handleDrawerToggle}
+          sx={{ position: 'fixed', left: 16, top: 16, zIndex: 1200 }}
+        >
+          <MenuIcon />
+        </IconButton>
+      )}
+
+      <Drawer
+        variant={isMobile ? 'temporary' : 'permanent'}
+        open={isMobile ? mobileOpen : true}
+        onClose={handleDrawerToggle}
+        ModalProps={{
+          keepMounted: true, // Better mobile performance
+        }}
         sx={{
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
-          transition: theme.transitions.create(['margin', 'width'], {
-            easing: theme.transitions.easing.easeOut,
-            duration: theme.transitions.duration.enteringScreen,
-          }),
+          width: DRAWER_WIDTH,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: DRAWER_WIDTH,
+            boxSizing: 'border-box',
+            border: 'none',
+            boxShadow: theme.shadows[2],
+          },
         }}
       >
-        <Toolbar>
-          {showNavigation && (
-            <IconButton
-              color="inherit"
-              edge="start"
-              onClick={handleDrawerToggle}
-              sx={{ mr: 2, display: { sm: 'none' } }}
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            QCS Management
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            {showNavigation && <OrganizationSwitcher />}
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-          </Box>
-        </Toolbar>
-      </AppBar>
-
-      {showNavigation && (
-        <Box
-          component="nav"
-          sx={{ 
-            width: { sm: drawerWidth }, 
-            flexShrink: { sm: 0 },
-            transition: theme.transitions.create('width', {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.leavingScreen,
-            }),
-          }}
-        >
-          <Drawer
-            variant="temporary"
-            open={mobileOpen}
-            onClose={handleDrawerToggle}
-            ModalProps={{
-              keepMounted: true, // Better open performance on mobile.
-            }}
-            sx={{
-              display: { xs: 'block', sm: 'none' },
-              '& .MuiDrawer-paper': {
-                boxSizing: 'border-box',
-                width: drawerWidth,
-              },
-            }}
-          >
-            {drawer}
-          </Drawer>
-          <Drawer
-            variant="permanent"
-            sx={{
-              display: { xs: 'none', sm: 'block' },
-              '& .MuiDrawer-paper': {
-                boxSizing: 'border-box',
-                width: drawerWidth,
-              },
-            }}
-            open
-          >
-            {drawer}
-          </Drawer>
-        </Box>
-      )}
+        {drawer}
+      </Drawer>
 
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          transition: theme.transitions.create(['margin', 'width'], {
-            easing: theme.transitions.easing.easeOut,
-            duration: theme.transitions.duration.enteringScreen,
-          }),
-          mt: '64px',
+          minHeight: '100vh',
+          backgroundColor: theme.palette.background.default,
+          ml: isMobile ? 0 : `${DRAWER_WIDTH}px`,
         }}
       >
-        <Outlet />
+        {children}
       </Box>
     </Box>
-  );
+  )
 }
+
+export default MainLayout

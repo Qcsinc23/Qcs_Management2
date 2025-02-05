@@ -1,19 +1,19 @@
-import useStore from '../../store/useStore';
+import useStore from '../../store/useStore'
 
-const useNotification = () => {
-  const { addNotification } = useStore();
+function useNotification() {
+  const { addNotification } = useStore()
 
   const notify = (message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
     addNotification({
       type,
       message,
-    });
-  };
+    })
+  }
 
-  const notifySuccess = (message: string) => notify(message, 'success');
-  const notifyError = (message: string) => notify(message, 'error');
-  const notifyWarning = (message: string) => notify(message, 'warning');
-  const notifyInfo = (message: string) => notify(message, 'info');
+  const notifySuccess = (message: string) => notify(message, 'success')
+  const notifyError = (message: string) => notify(message, 'error')
+  const notifyWarning = (message: string) => notify(message, 'warning')
+  const notifyInfo = (message: string) => notify(message, 'info')
 
   return {
     notify,
@@ -21,7 +21,7 @@ const useNotification = () => {
     notifyError,
     notifyWarning,
     notifyInfo,
-  };
-};
+  }
+}
 
-export default useNotification;
+export default useNotification

@@ -1,19 +1,18 @@
-import { AppBar, Toolbar, Typography, Container, Box, Button, IconButton } from '@mui/material';
+import { SignedIn, SignedOut, UserButton } from '@clerk/clerk-react'
 import {
-  Help as HelpIcon,
   AccountCircle as AccountIcon,
-  QuestionAnswer as ChatIcon,
-} from '@mui/icons-material';
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
-import ChatWidget from '../components/common/ChatWidget';
+  Help as HelpIcon,
+} from '@mui/icons-material'
+import { AppBar, Box, Button, Container, IconButton, Toolbar, Typography } from '@mui/material'
+import { Link, Outlet, useLocation } from 'react-router-dom'
+import ChatWidget from '../components/common/ChatWidget'
 
 export default function RetailLayout() {
-  const location = useLocation();
+  const location = useLocation()
 
   const isActive = (path: string) => {
-    return location.pathname === path;
-  };
+    return location.pathname === path
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -45,7 +44,7 @@ export default function RetailLayout() {
             >
               Track Package
             </Button>
-            
+
             <Button
               component={Link}
               to="/retail/book"
@@ -78,7 +77,7 @@ export default function RetailLayout() {
                 <AccountIcon />
               </IconButton>
             </SignedOut>
-            
+
             <SignedIn>
               <UserButton />
             </SignedIn>
@@ -105,7 +104,7 @@ export default function RetailLayout() {
           py: 3,
           px: 2,
           mt: 'auto',
-          backgroundColor: (theme) =>
+          backgroundColor: theme =>
             theme.palette.mode === 'light'
               ? theme.palette.grey[200]
               : theme.palette.grey[800],
@@ -113,12 +112,16 @@ export default function RetailLayout() {
       >
         <Container maxWidth="lg">
           <Typography variant="body2" color="text.secondary" align="center">
-            © {new Date().getFullYear()} QCS Express. All rights reserved.
+            ©
+            {' '}
+            {new Date().getFullYear()}
+            {' '}
+            QCS Express. All rights reserved.
           </Typography>
         </Container>
       </Box>
 
       <ChatWidget />
     </Box>
-  );
+  )
 }

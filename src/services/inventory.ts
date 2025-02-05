@@ -1,4 +1,4 @@
-import { InventoryItem } from '../types/inventory';
+import type { InventoryItem } from '../types/inventory'
 
 // Mock data - replace with actual API calls
 const mockInventory: InventoryItem[] = [
@@ -8,7 +8,7 @@ const mockInventory: InventoryItem[] = [
     sku: 'WIDGET-A',
     quantity: 100,
     location: 'Warehouse 1',
-    status: 'In Stock'
+    status: 'In Stock',
   },
   {
     id: '2',
@@ -16,13 +16,13 @@ const mockInventory: InventoryItem[] = [
     sku: 'GADGET-B',
     quantity: 50,
     location: 'Warehouse 2',
-    status: 'Low Stock'
-  }
-];
+    status: 'Low Stock',
+  },
+]
 
 export async function getInventory(): Promise<InventoryItem[]> {
   // Simulate network delay
-  return new Promise((resolve) => 
-    setTimeout(() => resolve(mockInventory), 500)
-  );
+  return new Promise(resolve =>
+    setTimeout(() => resolve(mockInventory), 500),
+  )
 }

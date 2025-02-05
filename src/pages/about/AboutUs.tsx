@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 
 const AboutUs: React.FC = () => {
   return (
@@ -134,7 +134,7 @@ const AboutUs: React.FC = () => {
         </button>
       </section>
     </div>
-  );
-};
+  )
+}
 
-export default AboutUs;
+export default AboutUs

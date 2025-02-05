@@ -1,17 +1,17 @@
-import { Box, Container, Typography, Paper } from '@mui/material';
-import { useLocation, useNavigate } from 'react-router-dom';
-import ProofOfDelivery from '../../components/retail/pod/ProofOfDelivery';
+import { Box, Container, Paper, Typography } from '@mui/material'
+import { useLocation, useNavigate } from 'react-router-dom'
+import ProofOfDelivery from '../../components/retail/pod/ProofOfDelivery'
 
 interface LocationState {
-  trackingNumber?: string;
-  recipientName?: string;
-  deliveryAddress?: string;
+  trackingNumber?: string
+  recipientName?: string
+  deliveryAddress?: string
 }
 
 export default function ProofOfDeliveryPage() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const state = location.state as LocationState;
+  const location = useLocation()
+  const navigate = useNavigate()
+  const state = location.state as LocationState
 
   // If no tracking information is provided, show an error
   if (!state?.trackingNumber || !state?.recipientName || !state?.deliveryAddress) {
@@ -26,18 +26,18 @@ export default function ProofOfDeliveryPage() {
           </Typography>
         </Paper>
       </Container>
-    );
+    )
   }
 
   const handleComplete = () => {
     // Navigate back to tracking page with success state
     navigate('/retail/track', {
-      state: { 
-        trackingNumber: state.trackingNumber, 
-        confirmed: true 
-      }
-    });
-  };
+      state: {
+        trackingNumber: state.trackingNumber,
+        confirmed: true,
+      },
+    })
+  }
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -63,5 +63,5 @@ export default function ProofOfDeliveryPage() {
         />
       </Box>
     </Container>
-  );
+  )
 }
